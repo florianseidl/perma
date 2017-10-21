@@ -1,0 +1,31 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="PerMaIT" type="JUnit" factoryName="JUnit" singleton="true" nameIsGenerated="true">
+    <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+      <pattern>
+        <option name="PATTERN" value="ch.sbb.perma.datastore.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <module name="perma" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <option name="PACKAGE_NAME" value="ch.sbb.perma" />
+    <option name="MAIN_CLASS_NAME" value="ch.sbb.perma.PerMaIT" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <option name="VM_PARAMETERS" value="-ea -Xmx10G -Xms10G -DtempDir=D:/temp" />
+    <option name="PARAMETERS" value="" />
+    <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
+    <option name="ENV_VARIABLES" />
+    <option name="PASS_PARENT_ENVS" value="true" />
+    <option name="TEST_SEARCH_SCOPE">
+      <value defaultName="moduleWithDependencies" />
+    </option>
+    <envs />
+    <patterns />
+    <RunnerSettings RunnerId="Debug with VisualVM">
+      <option name="visualVMId" value="8399356248881" />
+    </RunnerSettings>
+    <method />
+  </configuration>
+</component>
