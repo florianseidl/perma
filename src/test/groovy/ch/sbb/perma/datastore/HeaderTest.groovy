@@ -13,7 +13,7 @@ class HeaderTest extends Specification {
         def out = new ByteArrayOutputStream()
 
         when:
-        def newHeader = Header.newFullHeader("foo").writeTo(out)
+        def newHeader = Header.newFullHeader("foo",1).writeTo(out)
         def reread = Header.readFrom(new ByteArrayInputStream(out.toByteArray()))
 
         then:
@@ -26,8 +26,8 @@ class HeaderTest extends Specification {
         def out = new ByteArrayOutputStream()
 
         when:
-        def newHeader = Header.newFullHeader("foo")
-        newHeader.nextDelta().writeTo(out)
+        def newHeader = Header.newFullHeader("foo",42)
+        newHeader.nextDelta(1).writeTo(out)
         def reread = Header.readFrom(new ByteArrayInputStream(out.toByteArray()))
 
         then:
@@ -39,8 +39,8 @@ class HeaderTest extends Specification {
         def out = new ByteArrayOutputStream()
 
         when:
-        def newHeader = Header.newFullHeader("foo")
-        newHeader.nextDelta().nextDelta().writeTo(out)
+        def newHeader = Header.newFullHeader("foo",2)
+        newHeader.nextDelta(3).nextDelta(5).writeTo(out)
         def reread = Header.readFrom(new ByteArrayInputStream(out.toByteArray()))
 
         then:
@@ -53,7 +53,7 @@ class HeaderTest extends Specification {
         def out = new ByteArrayOutputStream()
 
         when:
-        Header.newFullHeader("foo").writeTo(out)
+        Header.newFullHeader("foo",7).writeTo(out)
         def bytes = out.toByteArray()
         bytes[0] = 0x00
         Header.readFrom(new ByteArrayInputStream(bytes))
@@ -67,7 +67,7 @@ class HeaderTest extends Specification {
         def out = new ByteArrayOutputStream()
 
         when:
-        Header.newFullHeader("foo").writeTo(out)
+        Header.newFullHeader("foo",7).writeTo(out)
         def bytes = out.toByteArray()
         bytes[10] = 0x00
         Header.readFrom(new ByteArrayInputStream(bytes))
@@ -78,7 +78,7 @@ class HeaderTest extends Specification {
 
     def toStringIsImplemented() {
         when:
-        def headerToString = Header.newFullHeader("foo").toString()
+        def headerToString = Header.newFullHeader("foo",7).toString()
 
         then:
         !headerToString.contains('@')

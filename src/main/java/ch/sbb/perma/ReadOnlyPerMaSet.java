@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static ch.sbb.perma.SetValueSerializer.TO_NULL;
+import static ch.sbb.perma.datastore.NullValueSerializer.NULL;
 
 /**
  * Read only persistent set.
@@ -44,7 +44,7 @@ public class ReadOnlyPerMaSet<T> implements PerMaSet<T> {
                                               String name,
                                               KeyOrValueSerializer<T> serializer) throws IOException {
         LOG.info("Loading readonly PerMaSet {} from directory {}", name, dir);
-        return new ReadOnlyPerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, TO_NULL));
+        return new ReadOnlyPerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
     }
 
     public void udpate() throws IOException {

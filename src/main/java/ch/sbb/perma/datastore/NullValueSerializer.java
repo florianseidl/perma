@@ -2,21 +2,20 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma;
+package ch.sbb.perma.datastore;
 
-import ch.sbb.perma.datastore.KeyOrValueSerializer;
 /**
- * Knows how to serialize and deserialize set values (null values).
+ * Knows how to serialize and deserialize null values (set values or deleted record values).
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class SetValueSerializer implements KeyOrValueSerializer<Object> {
+public class NullValueSerializer implements KeyOrValueSerializer<Object> {
     public final static Object NULL_OBJECT = Boolean.TRUE;
 
-    final static SetValueSerializer TO_NULL = new SetValueSerializer();
+    public final static NullValueSerializer NULL = new NullValueSerializer();
 
-    private SetValueSerializer() {
+    private NullValueSerializer() {
     }
 
     @Override

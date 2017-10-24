@@ -21,6 +21,7 @@ import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING;
  * @since 1.0, 2017.
  */
 class Header {
+    private static final short VERSION = 1;
     private static final Charset UTF_8 = Charset.forName("UTF-8");
     private static final byte[] FILE_MARKER = "PeMa".getBytes(UTF_8);
 
@@ -45,31 +46,35 @@ class Header {
     private final FileType fileType;
     private final UUID fullFileUUID;
     private final int updateFileNumber;
+    private final int size;
     private final String name;
 
-    private Header(FileType fileType, UUID fullFileUUID, int updateFileNumber, String name) {
+    Header(FileType fileType, UUID fullFileUUID, int updateFileNumber, int size, String name) {
         this.fileType = fileType;
         this.fullFileUUID = fullFileUUID;
         this.updateFileNumber = updateFileNumber;
+        this.size = size;
         this.name = name;
     }
 
-    static Header newFullHeader(String name) {
-        return new Header(FileType.FULL, UUID.randomUUID(), 0, name);
+    static Header newFullHeader(String name, int size) {
+        return new Header(FileType.FULL, UUID.randomUUID(), 0, size, name);
     }
 
-    Header nextDelta() {
-        return new Header(FileType.DELTA, this.fullFileUUID, this.updateFileNumber + 1, name);
+    Header nextDelta(int size) {
+        return new Header(FileType.DELTA, this.fullFileUUID, this.updateFileNumber + 1, size, name);
     }
 
     Header writeTo(OutputStream out) throws IOException {
         new BinaryWriter(out).write(FILE_MARKER);
         BinaryWriter writerWithChecksum = new BinaryWriter(out, new CRC32());
+        writerWithChecksum.writeShort(VERSION);
         writerWithChecksum.writeByte(fileType.byteValue);
         writerWithChecksum.writeLong(fullFileUUID.getMostSignificantBits());
         writerWithChecksum.writeLong(fullFileUUID.getLeastSignificantBits());
         writerWithChecksum.writeInt(updateFileNumber);
         writerWithChecksum.writeWithLength(STRING.toByteArray(name));
+        writerWithChecksum.writeInt(size);
         writerWithChecksum.writeChecksum();
         return this;
     }
@@ -81,31 +86,37 @@ class Header {
             throw new InvalidDataException(String.format("Not am PerMa file, file marker invalid: %s", marker));
         }
         BinaryReader readerWithChecksum = new BinaryReader(in, new CRC32());
+        readerWithChecksum.readShort(); // version is ignored for now
         FileType fileType = FileType.of(readerWithChecksum.readByte());
         UUID uuid = new UUID(readerWithChecksum.readLong(),
                              readerWithChecksum.readLong());
         int updateFileNumber = readerWithChecksum.readInt();
         String name = STRING.fromByteArray(readerWithChecksum.readWithLength());
+        int size = readerWithChecksum.readInt();
         if(!readerWithChecksum.readAndCheckChecksum()) {
             throw new InvalidDataException(
-                    String.format("Checksum mismatch in File header of header with name %s and uuid %s",
+                    String.format("Checksum mismatch in File header of header with name %.999s and uuid %s",
                                     name, uuid));
         }
-        return new Header(fileType, uuid, updateFileNumber, name);
+        return new Header(fileType, uuid, updateFileNumber, size, name);
     }
 
-    public boolean isFullFile() {
+    boolean isFullFile() {
         return fileType == FileType.FULL;
     }
 
-    public boolean belongsToSameFullFileAs(Header other) {
+    boolean belongsToSameFullFileAs(Header other) {
         return this.name.equals(other.name) && this.fullFileUUID.equals(other.fullFileUUID);
     }
 
-    public boolean isNextDeltaFileOf(Header other) {
+    boolean isNextDeltaFileOf(Header other) {
         return !this.isFullFile() &&
                 this.belongsToSameFullFileAs(other) &&
                 this.updateFileNumber == other.updateFileNumber + 1;
+    }
+
+    boolean hasSize(int mapDataSize) {
+        return mapDataSize == this.size;
     }
 
     @Override

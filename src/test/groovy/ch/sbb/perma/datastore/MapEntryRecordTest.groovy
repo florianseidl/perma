@@ -11,6 +11,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import static ch.sbb.perma.datastore.KeyOrValueSerializer.*
+import static ch.sbb.perma.datastore.NullValueSerializer.NULL
 
 class MapEntryRecordTest extends Specification {
 
@@ -82,11 +83,11 @@ class MapEntryRecordTest extends Specification {
         record.writeTo(
                 out,
                 STRING,
-                STRING)
+                NULL)
         def reread = record.readFrom(
                         new ByteArrayInputStream(out.bytes),
                         STRING,
-                        STRING)
+                        NULL)
 
         then:
         extractDeleted(reread).equals(['foo'] as Set)
@@ -100,11 +101,11 @@ class MapEntryRecordTest extends Specification {
 
         when:
         def record = MapEntryRecord.newOrUpdated('foo', value)
-        record.writeTo(out, STRING, KeyOrValueSerializer.OPTIONAL_STRING)
+        record.writeTo(out, STRING, OPTIONAL_STRING)
         def reread = MapEntryRecord.readFrom(
                 new ByteArrayInputStream(out.bytes),
                 STRING,
-                KeyOrValueSerializer.OPTIONAL_STRING)
+                OPTIONAL_STRING)
         reread.addTo(mapBuilder, ImmutableSet.builder())
 
         then:

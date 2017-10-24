@@ -33,14 +33,14 @@ public class MapData<K,V> {
     private final ImmutableMap<K,V> newAndUpdated;
     private final ImmutableSet<K> deleted;
 
-    private MapData(Header mapFileHeader, ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
+    MapData(Header mapFileHeader, ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
         this.header = mapFileHeader;
         this.newAndUpdated = newAndUpdated;
         this.deleted = deleted;
     }
 
     public static <K,V> MapData<K,V> createNewFull(String name, ImmutableMap<K,V> current) {
-        return new MapData<K,V>(Header.newFullHeader(name), current, ImmutableSet.of());
+        return new MapData<K,V>(Header.newFullHeader(name, current.size()), current, ImmutableSet.of());
     }
 
     public static <K,V> MapData<K,V> readFileGroupAndCollect(File fullFile,
@@ -49,7 +49,7 @@ public class MapData<K,V> {
                                                              KeyOrValueSerializer<V> valueSerializer,
                                                              Map<K,V> collector) throws IOException {
         MapData<K,V> latestData = MapData.readFrom(fullFile, keySerializer, valueSerializer)
-                .addTo(collector);
+                    .addTo(collector);
         if(!latestData.header.isFullFile()) {
             throw new HeaderMismatchException(
                     String.format("Invalid header, expected full file header but is %s",
@@ -97,12 +97,17 @@ public class MapData<K,V> {
         ImmutableSet.Builder<K> deleted = new ImmutableSet.Builder<>();
         try (BufferedInputStream in = new BufferedInputStream(input)) {
             Header header = Header.readFrom(in);
+            int count = 0;
             while (true) {
                 MapEntryRecord record = MapEntryRecord.readFrom(in, keySerializer, valueSerializer);
                 if (record == null) {
                     break; // EOF
                 }
                 record.addTo(newOrUpdated, deleted);
+                count++;
+            }
+            if(!header.hasSize(count)) {
+                throw new HeaderMismatchException("Invalid size, mismatch between header and stored size");
             }
             return new MapData(header, newOrUpdated.build(), deleted.build());
         }
@@ -153,15 +158,18 @@ public class MapData<K,V> {
             for(K deleted : deleted) {
                 MapEntryRecord
                         .deleted(deleted)
-                        .writeTo(out, keySerializer, valueSerializer);
+                        .writeTo(out, keySerializer, NullValueSerializer.NULL);
             }
             out.flush();
+            if(!header.hasSize(newAndUpdated.size() + deleted.size())) {
+                throw new HeaderMismatchException("Invalid size, mismatch between header and stored size");
+            }
         }
         return this;
     }
 
     public MapData<K,V> nextDelta(ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
-        return new MapData(header.nextDelta(), newAndUpdated, deleted);
+        return new MapData<>(header.nextDelta(newAndUpdated.size() + deleted.size()), newAndUpdated, deleted);
     }
 
     MapData<K,V> addTo(Map<K,V> map) {
@@ -173,6 +181,7 @@ public class MapData<K,V> {
     public boolean isEmpty() {
         return newAndUpdated.isEmpty() && deleted.isEmpty();
     }
+
 
     @Override
     public String toString() {

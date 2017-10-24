@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static ch.sbb.perma.SetValueSerializer.NULL_OBJECT;
-import static ch.sbb.perma.SetValueSerializer.TO_NULL;
+import static ch.sbb.perma.datastore.NullValueSerializer.NULL;
+import static ch.sbb.perma.datastore.NullValueSerializer.NULL_OBJECT;
 
 /**
  * A container for a mutable persistent set.
@@ -57,7 +57,7 @@ public class WritabePerMaSet<T> implements PerMaSet<T> {
                                                      String name,
                                                      KeyOrValueSerializer<T> serializer) throws IOException {
         LOG.info("Loading writabe PerMaSet {} from directory {}", name, dir);
-        return new WritabePerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, TO_NULL));
+        return new WritabePerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
     }
 
     public void persist() throws IOException {
