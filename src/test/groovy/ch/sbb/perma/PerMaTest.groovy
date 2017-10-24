@@ -37,7 +37,7 @@ class PerMaTest extends Specification {
         def perMaReread = WritabePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         then:
-        perMaReread.map() == map
+        perMaReread.map().equals(map)
 
         where:
         map                                               | keySerializer | valueSerializer
@@ -62,7 +62,7 @@ class PerMaTest extends Specification {
         def perMaReread = WritabePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         then:
-        perMaReread.map()['key'] == expected
+        perMaReread.map()['key'].equals(expected)
 
         where:
         nr | map                                                        | valueSerializer                       || expected
@@ -84,7 +84,56 @@ class PerMaTest extends Specification {
         def perMaReread = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.map() == map
+        perMaReread.map().equals(map)
+    }
+
+    def "write read readOnly string2String map"() {
+        given:
+        def map = ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING]
+        def perMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+
+        when:
+        perMa.map().putAll(map)
+        perMa.persist();
+        def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+
+        then:
+        perMaReread.map().equals(map)
+    }
+
+    def "read readOnly string2String no files"() {
+        when:
+        def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+
+        then:
+        perMaReread.map().equals([:])
+    }
+
+    @Unroll
+    def "write read write update readOnly string2String map #initial.keySet() #update.keySet()"() {
+        given:
+        def writablePerMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+
+        when:
+        writablePerMa.map().putAll(initial)
+        writablePerMa.persist()
+        def readOnlyPerMa = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+        writablePerMa.map().clear()
+        writablePerMa.map().putAll(update)
+        writablePerMa.persist()
+        readOnlyPerMa.udpate()
+
+        then:
+        readOnlyPerMa.map().equals(update)
+
+        where:
+        initial                                            | update
+        ['foo':FOO]                                        | ['foo':FOO, 'N I X':NIX]
+        ['foo':FOO, 'N I X':NIX]                           | ['foo':LONG_STRING, 'N I X':FOO]
+        ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING] | [:]
+        ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING] | ['foo':NIX, 'long store':LONG_STRING]
+        [:]                                                | [:]
+        [:]                                                | ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING]
     }
 
 }

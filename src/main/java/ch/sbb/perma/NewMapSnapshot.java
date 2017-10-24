@@ -7,8 +7,9 @@ package ch.sbb.perma;
 import ch.sbb.perma.datastore.KeyOrValueSerializer;
 import ch.sbb.perma.datastore.MapData;
 import com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -21,34 +22,56 @@ import java.util.Map;
  * @since 1.0, 2017.
  */
 class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
+    private static final Logger LOG = LoggerFactory.getLogger(MapSnapshot.class);
+
     private final String name;
-    private final Directory directory;
+    private final FileGroup files;
     private final KeyOrValueSerializer<K> keySerializer;
     private final KeyOrValueSerializer<V> valueSerializer;
 
-    public NewMapSnapshot(String name, Directory directory, KeyOrValueSerializer<K> keySerializer, KeyOrValueSerializer<V> valueSerializer) {
+    NewMapSnapshot(String name, FileGroup directory, KeyOrValueSerializer<K> keySerializer, KeyOrValueSerializer<V> valueSerializer) {
+        LOG.debug("Creating new Snapshot");
         this.name = name;
-        this.directory = directory;
+        this.files = directory;
         this.keySerializer = keySerializer;
         this.valueSerializer = valueSerializer;
     }
 
     @Override
-    public MapSnapshot writeNext(Map<K,V> current)  throws IOException{
-        ImmutableMap<K,V> currentImmutable = ImmutableMap.copyOf(current);
-        File tempFile = directory.tempFile();
+    public MapSnapshot writeNext(Map<K,V> current)  throws IOException {
+        return writeNext(ImmutableMap.copyOf(current));
+    }
+
+    public MapSnapshot writeNext(ImmutableMap<K,V> currentImmutable)  throws IOException{
+        if(currentImmutable.isEmpty()) {
+            LOG.debug("Noting to write (map is still empty), ignoring");
+            return this;
+        }
+        FileGroup newFullFileGroup = files.withNextFull();
         MapData fullData = MapData
                                 .createNewFull(name, currentImmutable)
-                                .writeTo(tempFile,
+                                .writeTo(newFullFileGroup.fullFile(),
                                          keySerializer,
                                          valueSerializer);
-        tempFile.renameTo(directory.nextFullFile());
-        return new PersistendMapSnapshot<K,V>(
-                directory,
+        LOG.debug("Writing full file with mapSize={} to file {}",
+                    currentImmutable.size(),
+                    newFullFileGroup.fullFile());
+        return new PersistendMapSnapshot<>(
+                newFullFileGroup,
                 currentImmutable,
                 fullData,
                 keySerializer,
                 valueSerializer);
+    }
+
+    @Override
+    public MapSnapshot<K, V> refresh() throws IOException {
+        FileGroup refreshedFiles = files.refresh();
+        if(!refreshedFiles.exists()) {
+            LOG.debug("No file found, cancelling refresh");
+            return this;
+        }
+        return PersistendMapSnapshot.load(refreshedFiles, keySerializer, valueSerializer);
     }
 
     @Override

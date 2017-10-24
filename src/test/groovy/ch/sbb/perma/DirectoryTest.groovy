@@ -22,7 +22,7 @@ class DirectoryTest extends Specification {
         }
 
         when:
-        def latest = new Directory(tempDir, name).listLatest()
+        def latest = FileGroup.list(tempDir, name)
 
         then:
         latest.fullFile().name == latestFullFile
@@ -43,20 +43,21 @@ class DirectoryTest extends Specification {
     }
 
     @Unroll
-    def "no latest file #files"() {
+    def "no latest file #existingFiles"() {
         given:
-        files.forEach {
+        existingFiles.forEach {
             touch(it)
         }
 
         when:
-        def exists = new Directory(tempDir, name).fileExists()
+        def files = FileGroup.list(tempDir, name)
 
         then:
-        !exists
+        !files.exists()
+        files.deltaFiles().isEmpty()
 
         where:
-        files              | name
+        existingFiles      | name
         []                 | 'foo'
         ['foo_1_0.perma']  | 'bar'
         ['foo_1_42.perma'] | 'foo'
@@ -70,9 +71,10 @@ class DirectoryTest extends Specification {
         }
 
         when:
-        def nextDeltaFile = new Directory(tempDir, 'foo' )
-                .listLatest()
-                .nextDeltaFile()
+        def nextDeltaFile = FileGroup
+                .list(tempDir, 'foo' )
+                .withNextDelta()
+                .latestDeltaFile()
 
         then:
         nextDeltaFile.name == nextDeltaFileName
@@ -92,7 +94,10 @@ class DirectoryTest extends Specification {
         }
 
         when:
-        def nextFullFile = new Directory(tempDir, 'foo' ).nextFullFile()
+        def nextFullFile = FileGroup
+                .list(tempDir, 'foo' )
+                .withNextFull()
+                .fullFile()
 
         then:
         nextFullFile.name == nextFullFileName
@@ -109,4 +114,68 @@ class DirectoryTest extends Specification {
     def touch(name) {
         new File(tempDir, name).createNewFile();
     }
+
+    def "list no file FileNotFoundException"() {
+        when:
+        FileGroup.list(tempDir, 'gibtsned').fullFile()
+
+        then:
+        thrown FileNotFoundException
+    }
+
+    @Unroll
+    def "latest delta for #existingFiles FileNotFoundExceptoin"() {
+        given:
+        existingFiles.forEach {
+            touch(it)
+        }
+
+        when:
+        FileGroup.list(tempDir, 'foo').latestDeltaFile()
+
+        then:
+        thrown FileNotFoundException
+
+        where:
+        existingFiles << [[], ['foo_1_0.perma'],['foo_1_42.perma']]
+    }
+
+    @Unroll
+    def "delta files of #filesToWriteNow since #filesToWriteBefore"() {
+        given:
+        filesToWriteBefore.forEach {
+            touch(it)
+        }
+
+        when:
+        def filesBefore = FileGroup.list(tempDir, 'foo' )
+        filesToWriteNow.forEach {
+            touch(it)
+        }
+        def filesNow = filesBefore.refresh();
+        def deltaFilesSince = filesNow.deltaFilesSince(filesBefore)
+
+        then:
+        deltaFilesSince.collect { it.name } == result
+
+        where:
+        filesToWriteBefore                 | filesToWriteNow                                   || result
+        ['foo_1_0.perma']                  | ['foo_1_0.perma','foo_1_1.perma']                 || ['foo_1_1.perma']
+        []                                 | ['foo_1_0.perma','foo_1_1.perma']                 || ['foo_1_1.perma']
+        []                                 | ['foo_1_0.perma']                                 || []
+        ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_2.perma'] || ['foo_1_2.perma']
+        ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_2.perma',
+                                              'foo_1_3.perma']                                 || ['foo_1_2.perma','foo_1_3.perma']
+        ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_3.perma'] || ['foo_1_3.perma']
+    }
+
+    def toStringIsImplemented() {
+        when:
+        def fileGroupToString = FileGroup.list(tempDir, 'foo').toString()
+
+        then:
+        !fileGroupToString.contains('@')
+    }
+
+
 }

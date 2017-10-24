@@ -31,7 +31,7 @@ class MapEntryRecordTest extends Specification {
                 valueSerializer)
 
         then:
-        extractNewOrUdpated(reread) == ImmutableMap.of(entryKey, entryValue)
+        extractNewOrUdpated(reread).equals(ImmutableMap.of(entryKey, entryValue))
 
         where:
         entryKey | entryValue     | keySerializer  | valueSerializer
@@ -89,16 +89,17 @@ class MapEntryRecordTest extends Specification {
                         STRING)
 
         then:
-        extractDeleted(reread) == ['foo'] as Set
+        extractDeleted(reread).equals(['foo'] as Set)
     }
 
-    def "write read null value"() {
+    @Unroll
+    def "write read null value #value"() {
         given:
         def mapBuilder = new ImmutableMap.Builder<String, Optional<byte[]>>()
         def out = new ByteOutputStream()
 
         when:
-        def record = MapEntryRecord.newOrUpdated('foo', Optional.empty())
+        def record = MapEntryRecord.newOrUpdated('foo', value)
         record.writeTo(out, STRING, KeyOrValueSerializer.OPTIONAL_STRING)
         def reread = MapEntryRecord.readFrom(
                 new ByteArrayInputStream(out.bytes),
@@ -108,7 +109,10 @@ class MapEntryRecordTest extends Specification {
 
         then:
         def map = mapBuilder.build()
-        map['foo'] == Optional.empty()
+        map['foo'] == value
+
+        where:
+        value << [Optional.empty(), Optional.of("is eh was da")];
     }
 
     def extractNewOrUdpated(mapEntryRecord) {
@@ -125,4 +129,13 @@ class MapEntryRecordTest extends Specification {
         mapEntryRecord.addTo(newOrUpdated, deleted);
         return [newOrUpdated.build(), deleted.build()]
     }
+
+    def toStringIsImplemented() {
+        when:
+        def recordToString = MapEntryRecord.newOrUpdated('foo', 'bar').toString()
+
+        then:
+        !recordToString.contains('@')
+    }
+
 }

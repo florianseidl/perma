@@ -30,7 +30,7 @@ class PerMaSetTest extends Specification {
         def perMaSetReread = WritabePerMaSet.loadOrCreate(tempDir, "testset", serializer)
 
         then:
-        perMaSetReread.set() == set
+        perMaSetReread.set().equals(set)
 
         where:
         nr | set                                   | serializer
@@ -53,7 +53,55 @@ class PerMaSetTest extends Specification {
         def perMaSetReread = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         then:
-        perMaSetReread.set() == set
+        perMaSetReread.set().equals(set)
     }
 
+    def "write read readOnly string set"() {
+        given:
+        def set = ['foo', 'N I X', 'bla bla bla'] as Set
+        def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
+
+        when:
+        perMaSet.set().addAll(set)
+        perMaSet.persist();
+        def perMaReread = ReadOnlyPerMaSet.loadStringSet(tempDir, "testset")
+
+        then:
+        perMaReread.set().equals(set)
+    }
+
+    def "read readOnly string no files"() {
+        when:
+        def perMaSetReread = ReadOnlyPerMaSet.loadStringSet(tempDir, "testset")
+
+        then:
+        perMaSetReread.set().equals([] as Set)
+    }
+
+    @Unroll
+    def "write read write update readOnly string set #initial #update"() {
+        given:
+        def writablePerMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
+
+        when:
+        writablePerMaSet.set().addAll(initial)
+        writablePerMaSet.persist()
+        def readOnlyPerMaSet = ReadOnlyPerMaSet.loadStringSet(tempDir, "testset")
+        writablePerMaSet.set().clear()
+        writablePerMaSet.set().addAll(update)
+        writablePerMaSet.persist()
+        readOnlyPerMaSet.udpate()
+
+        then:
+        readOnlyPerMaSet.set().equals(update)
+
+        where:
+        initial                                     | update
+        ['foo'] as Set                              | ['foo', 'N I X'] as Set
+        ['foo', 'N I X'] as Set                     | ['foo', 'N I X'] as Set
+        ['foo', 'N I X', 'nix als bledsinn'] as Set | [] as Set
+        ['foo', 'N I X', 'nix als bledsinn'] as Set | ['foo', 'nix als bledsinn', 'bli bla blo'] as Set
+        [] as Set                                   | [] as Set
+        [] as Set                                   | ['foo', 'N I X', 'nix als bledsinn'] as Set
+    }
 }
