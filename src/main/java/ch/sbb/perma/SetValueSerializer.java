@@ -12,7 +12,7 @@ import ch.sbb.perma.datastore.KeyOrValueSerializer;
  * @since 1.0, 2017.
  */
 class SetValueSerializer implements KeyOrValueSerializer<Object> {
-    public final static Object NULL_OBJECT = new Object();
+    public final static Object NULL_OBJECT = Boolean.TRUE;
 
     final static SetValueSerializer TO_NULL = new SetValueSerializer();
 

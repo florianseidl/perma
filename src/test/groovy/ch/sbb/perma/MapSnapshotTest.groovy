@@ -25,12 +25,12 @@ class MapSnapshotTest extends Specification {
         when:
         def snapshot = new NewMapSnapshot(
                 'foo',
-                new Directory(tempDir, 'foo'),
+                FileGroup.list(tempDir, 'foo'),
                 STRING,
                 STRING)
 
         then:
-        snapshot.asImmutableMap() == [:]
+        snapshot.asImmutableMap().equals([:])
     }
 
     @Unroll
@@ -38,7 +38,7 @@ class MapSnapshotTest extends Specification {
         given:
         def newSnapshot = new NewMapSnapshot(
                 'foo',
-                new Directory(tempDir, 'foo'),
+                FileGroup.list(tempDir, 'foo'),
                 keySerializer,
                 valueSerializer)
 
@@ -46,14 +46,13 @@ class MapSnapshotTest extends Specification {
         def next = newSnapshot.writeNext(map)
 
         then:
-        next.asImmutableMap() == map
-        new Directory(tempDir, 'foo').fileExists()
+        next.asImmutableMap().equals(map)
+        FileGroup.list(tempDir, 'foo').exists()
 
         where:
         map                                     | keySerializer  | valueSerializer
         ['A':VALUE_A]                           | STRING         | STRING
         ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | STRING         | STRING
-        [:]                                     | STRING         | STRING
         ['foo':'bar']                           | STRING         | STRING
         [666:42]                                | INTEGER        | INTEGER
         [99999L : Long.MIN_VALUE]               | LONG           | LONG
@@ -65,7 +64,7 @@ class MapSnapshotTest extends Specification {
         given:
         def newSnapshot = new NewMapSnapshot(
                 'foo',
-                new Directory(tempDir, 'foo'),
+                FileGroup.list(tempDir, 'foo'),
                 keySerializer,
                 valueSerializer)
 
@@ -74,7 +73,7 @@ class MapSnapshotTest extends Specification {
         def overnext = next.writeNext(map)
 
         then:
-        overnext.asImmutableMap() == map
+        overnext.asImmutableMap().equals(map)
 
         where:
         map                                     | keySerializer | valueSerializer
@@ -92,7 +91,7 @@ class MapSnapshotTest extends Specification {
         given:
         def next = new NewMapSnapshot(
                 'foo',
-                new Directory(tempDir, 'foo'),
+                FileGroup.list(tempDir, 'foo'),
                 STRING,
                 STRING)
 
@@ -115,18 +114,20 @@ class MapSnapshotTest extends Specification {
 
     def "next from persisted snapshot delelete intermediate snapshot"() {
         given:
-        def directory = new Directory(tempDir, 'foo')
         def newSnapshot = new NewMapSnapshot(
-                'foo', directory, STRING, STRING)
+                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
 
         when:
-        newSnapshot.writeNext([:])
-        .writeNext(['A':VALUE_A])
-        .writeNext(['A':VALUE_A, 'B':VALUE_B]);
+        newSnapshot.writeNext(['A':VALUE_A])
+                    .writeNext(['A':VALUE_A, 'B':VALUE_B])
+                    .writeNext(['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C])
 
-        directory.listLatest().deltaFiles()[0].delete()
+        def firstDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
+        def secondDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[1]
+        firstDelta.delete()
+        secondDelta.renameTo(firstDelta)
 
-        PersistendMapSnapshot.loadLatest(directory, STRING, STRING)
+        PersistendMapSnapshot.load(FileGroup.list(tempDir, 'foo'), STRING, STRING)
 
         then:
         thrown HeaderMismatchException
@@ -135,33 +136,79 @@ class MapSnapshotTest extends Specification {
     def "snapshot file from different full file"() {
         given:
         def newSnapshotFoo = new NewMapSnapshot(
-                'foo', new Directory(tempDir, 'foo'), STRING, STRING)
+                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
         def newSnapshotBar = new NewMapSnapshot(
-                'bar', new Directory(tempDir, 'bar'), STRING, STRING)
+                'bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
 
         when:
         newSnapshotFoo.writeNext(['A':VALUE_A]).writeNext(['C':VALUE_C])
-        newSnapshotBar.writeNext([:]).writeNext(['C':VALUE_C]).writeNext(['C':VALUE_C, 'B':VALUE_B]);
+        newSnapshotBar.writeNext(['A':VALUE_A]).writeNext(['C':VALUE_C]).writeNext(['C':VALUE_C, 'B':VALUE_B]);
 
-        File firstFooDelta = new Directory(tempDir, 'foo').listLatest().deltaFiles()[0]
-        File lastBarDelta = new Directory(tempDir, 'bar').listLatest().deltaFiles()[1]
+        File firstFooDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
+        File lastBarDelta = FileGroup.list(tempDir, 'bar').deltaFiles()[1]
         lastBarDelta.delete()
         firstFooDelta.renameTo(lastBarDelta)
 
-        PersistendMapSnapshot.loadLatest(new Directory(tempDir, 'bar'), STRING, STRING)
+        PersistendMapSnapshot.load(FileGroup.list(tempDir, 'bar'), STRING, STRING)
 
         then:
         thrown HeaderMismatchException
     }
 
-    def "load not found"() {
+    def "not a full file"() {
         given:
-        def directory = new Directory(tempDir, 'foo')
+        def newSnapshot = new NewMapSnapshot(
+                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
 
         when:
-        PersistendMapSnapshot.loadLatest(directory, STRING, STRING)
+        newSnapshot.writeNext(['A':VALUE_A]).writeNext(['B':VALUE_B])
+
+        def files = FileGroup.list(tempDir, 'foo')
+        def firstDelta = files.deltaFiles()[0]
+        files.fullFile().delete()
+        firstDelta.renameTo(files.fullFile())
+
+        PersistendMapSnapshot.load(FileGroup.list(tempDir, 'foo'), STRING, STRING)
+
+        then:
+        thrown HeaderMismatchException
+    }
+
+    def "load persistent not found"() {
+        given:
+        def files = FileGroup.list(tempDir, 'foo')
+
+        when:
+        PersistendMapSnapshot.load(files, STRING, STRING)
 
         then:
         thrown FileNotFoundException
     }
+
+    @Unroll
+    def "next no change not written #map.keySet()"() {
+        given:
+        def newSnapshot = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+
+        when:
+        def overovernext = newSnapshot.writeNext(map).writeNext(map).writeNext(map)
+        def files = FileGroup.list(tempDir, 'foo')
+        def nrDeltaFiles = files.deltaFiles().size()
+        def fullFileExists = files.exists()
+
+        then:
+        overovernext.asImmutableMap().equals(map)
+        nrDeltaFiles == 0
+        fullFileExists == !map.isEmpty()
+
+        where:
+        map << [['A':VALUE_A],
+                ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C],
+                [:]]
+    }
+
 }

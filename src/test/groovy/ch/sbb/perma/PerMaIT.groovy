@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 
 import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING
 import static java.util.UUID.randomUUID
+import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY
 
 /**
  * Test the performance and memory usage with real load.
@@ -21,11 +22,15 @@ import static java.util.UUID.randomUUID
  * Warning: will require 10GB ram and disk space. Disabled by default in POM.
  *
  * @author u206123 (Florian Seidl)
- * @since 1.0, 2017.
+ * @since 1.0 , 2017.
  */
 class PerMaIT extends Specification {
 
     File tempDir
+
+    def setupSpec() {
+        System.setProperty(DEFAULT_LOG_LEVEL_KEY, "TRACE");
+    }
 
     def setup() {
         tempDir = createTempDir()
@@ -34,11 +39,11 @@ class PerMaIT extends Specification {
 
     def createTempDir() {
         String configuredTempDir = System.getProperty('tempDir')
-        if(configuredTempDir == null) {
+        if (configuredTempDir == null) {
             return File.createTempDir()
 
         }
-        File dir = new File(configuredTempDir, randomUUID().toString())
+        File dir = new File(configuredTempDir, "perma_${randomUUID()}")
         dir.mkdirs()
         return dir;
     }
@@ -48,37 +53,56 @@ class PerMaIT extends Specification {
     }
 
     @Unroll
-    @Timeout(value=5, unit=TimeUnit.MINUTES)
-    def "write read #writes times map of #mapSize random entries"() {
+    @Timeout(value = 5, unit = TimeUnit.MINUTES)
+    def "write #writes times map of #mapSize random entries in #threads thread"() {
         given:
         def perMa = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
 
         when:
-        (0 .. writes).forEach {
-            (0..mapSize).forEach {
-                perMa.map().put(randomUUID().toString(),
-                                randomUUID().toString().multiply(50*(it%5 + 1)))
+        final int writesInThread = writes / threads
+        final mapSizeInThread = mapSize
+        def runable = new Runnable() {
+            @Override
+            void run() {
+                (1..writesInThread).forEach {
+                    (1..mapSizeInThread).forEach {
+                        perMa.map().put(randomUUID().toString(),
+                                randomUUID().toString().multiply(50 * (it % 5 + 1)))
+                    }
+                    println("write $it, mapSize ${perMa.map().size()}")
+                    perMa.persist();
+                }
             }
-            println("write $it, mapSize ${perMa.map().size()}")
-            perMa.persist();
         }
+        def threadList = (1..threads).collect {
+            new Thread(runable)
+        }
+        println("Starting write in ${threadList.size()} threads")
+        threadList.forEach { it.start() }
+        println("Waiting for threads to join... ")
+        threadList.forEach { it.join() }
         println("all written, mapSize ${perMa.map().size()}")
-        def perMaReread = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perMaSize = perMa.map().size()
+        def perMaReread = ReadOnlyPerMa.load(tempDir, "bigmap", STRING, STRING)
+        def reReadSize = perMaReread.map().size()
         println("reread, mapSize ${perMaReread.map().size()}")
+        MapDifference diff = Maps.difference(perMa.map(), perMaReread.map())
 
         then:
-        perMaReread.map().size() == perMa.map().size()
-        MapDifference diff = Maps.difference(perMa.map(), perMaReread.map())
-        assert diff.entriesDiffering().isEmpty()
-        assert diff.entriesOnlyOnLeft().isEmpty()
-        assert diff.entriesOnlyOnRight().isEmpty()
+        reReadSize == perMaSize
+        // simple spock map comparision fails here due to excessive memory usage
+        diff.entriesDiffering().isEmpty()
+        diff.entriesOnlyOnLeft().isEmpty()
+        diff.entriesOnlyOnRight().isEmpty()
 
         where:
-        writes | mapSize
-        500    | 500
-        50     | 5000
-        5      | 50000
-
-        resultSize = writes * mapSize
+        writes | mapSize | threads
+        500    | 500     | 1
+        50     | 5000    | 1
+        5      | 50000   | 1
+        30     | 50      | 3
+        50     | 5000    | 3
+        50     | 5000    | 50
+        5      | 500     | 50
     }
 }

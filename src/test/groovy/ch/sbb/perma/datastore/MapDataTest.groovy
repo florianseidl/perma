@@ -56,7 +56,7 @@ class MapDataTest extends Specification {
                 STRING)
 
         then:
-        extractMap(reread) == map
+        extractMap(reread).equals(map)
 
         where:
         map << [['A':MapDataTest.VALUE_A], ['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B], [:], ['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B, 'C':MapDataTest.VALUE_C]]
@@ -107,7 +107,7 @@ class MapDataTest extends Specification {
                 STRING)
 
         then:
-        extractMap(reread, existingMap) == expected
+        extractMap(reread, existingMap).equals(expected)
 
         where:
         deleted    | existingMap                                          || expected
@@ -134,7 +134,7 @@ class MapDataTest extends Specification {
                 STRING)
 
         then:
-        extractMap(reread) == expected
+        extractMap(reread).equals(expected)
 
         where:
         newOrUpdated                                       | deleted || expected
@@ -145,4 +145,17 @@ class MapDataTest extends Specification {
         mapData.addTo(map);
         return map
     }
+
+    def toStringIsImplemented() {
+        when:
+        def mapDataToString = new MapData(
+                Header.newFullHeader(NAME),
+                ImmutableMap.of('A', MapDataTest.VALUE_A),
+                ImmutableSet.of('C'))
+                .toString();
+
+        then:
+        !mapDataToString.contains('@')
+    }
+
 }

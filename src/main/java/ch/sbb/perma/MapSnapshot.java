@@ -25,19 +25,21 @@ interface MapSnapshot<K, V> {
         if(keySerializer == null || valueSerializer == null) {
             throw new NullPointerException("keySerializer and/or valueSerializer is null");
         }
-        Directory directory = new Directory(dir, name);
-        if (!directory.fileExists()) {
+        FileGroup files = FileGroup.list(dir, name);
+        if (!files.exists()) {
             return new NewMapSnapshot<K, V>(
                     name,
-                    directory,
+                    files,
                     keySerializer,
                     valueSerializer);
         }
-        return PersistendMapSnapshot.loadLatest(
-                directory,
+        return PersistendMapSnapshot.load(
+                files,
                 keySerializer,
                 valueSerializer);
     }
+
+    MapSnapshot<K,V> refresh() throws IOException;
 
     MapSnapshot<K, V> writeNext(Map<K, V> currentState) throws IOException;
 

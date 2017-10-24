@@ -76,4 +76,11 @@ class HeaderTest extends Specification {
         thrown InvalidDataException
     }
 
+    def toStringIsImplemented() {
+        when:
+        def headerToString = Header.newFullHeader("foo").toString()
+
+        then:
+        !headerToString.contains('@')
+    }
 }
