@@ -5,7 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.KeyOrValueSerializer;
-import ch.sbb.perma.datastore.MapData;
+import ch.sbb.perma.datastore.MapFileData;
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +29,7 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
     private final KeyOrValueSerializer<K> keySerializer;
     private final KeyOrValueSerializer<V> valueSerializer;
 
+
     NewMapSnapshot(String name, FileGroup directory, KeyOrValueSerializer<K> keySerializer, KeyOrValueSerializer<V> valueSerializer) {
         LOG.debug("Creating new Snapshot");
         this.name = name;
@@ -42,13 +43,13 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
         return writeNext(ImmutableMap.copyOf(current));
     }
 
-    public MapSnapshot writeNext(ImmutableMap<K,V> currentImmutable)  throws IOException{
-        if(currentImmutable.isEmpty()) {
-            LOG.debug("Noting to write (map is still empty), ignoring");
+    public MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable)  throws IOException{
+        if(currentImmutable.isEmpty() && !files.exists()) {
+            LOG.debug("Noting to write (map is not yet peristed and still empty), ignoring");
             return this;
         }
         FileGroup newFullFileGroup = files.withNextFull();
-        MapData fullData = MapData
+        MapFileData fullData = MapFileData
                                 .createNewFull(name, currentImmutable)
                                 .writeTo(newFullFileGroup.fullFile(),
                                          keySerializer,
@@ -56,7 +57,8 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
         LOG.debug("Writing full file with mapSize={} to file {}",
                     currentImmutable.size(),
                     newFullFileGroup.fullFile());
-        return new PersistendMapSnapshot<>(
+        return new PersistedMapSnapshot<>(
+                name,
                 newFullFileGroup,
                 currentImmutable,
                 fullData,
@@ -71,7 +73,12 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
             LOG.debug("No file found, cancelling refresh");
             return this;
         }
-        return PersistendMapSnapshot.load(refreshedFiles, keySerializer, valueSerializer);
+        return PersistedMapSnapshot.load(name, refreshedFiles, keySerializer, valueSerializer);
+    }
+
+    @Override
+    public MapSnapshot<K, V> compact() throws IOException {
+        return this;
     }
 
     @Override

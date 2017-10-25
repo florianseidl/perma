@@ -72,6 +72,19 @@ public class WritabePerMaSet<T> implements PerMaSet<T> {
         }
     }
 
+    public void compact() throws IOException {
+        try {
+            persistLock.lock();
+            persist();
+            LOG.debug("Compacting set");
+            this.lastPersisted = lastPersisted.compact();
+            LOG.debug("Compacted set to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+        }
+        finally {
+            persistLock.unlock();
+        }
+    }
+
     @Override
     public Set<T> set() {
         return set;
