@@ -15,7 +15,7 @@ import java.util.zip.CRC32;
 import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING;
 
 /**
- * The binary format of the header of a PerMa File.
+ * The binary format of the header of a Writeable File.
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
@@ -83,7 +83,7 @@ class Header {
     static Header readFrom(InputStream in) throws IOException {
         byte[] marker = new BinaryReader(in).read(FILE_MARKER.length);
         if(!Arrays.equals(marker, FILE_MARKER)) {
-            throw new InvalidDataException(String.format("Not am PerMa file, file marker invalid: %s", marker));
+            throw new InvalidDataException(String.format("Not am Writeable file, file marker invalid: %s", marker));
         }
         BinaryReader readerWithChecksum = new BinaryReader(in, new CRC32());
         readerWithChecksum.readShort(); // version is ignored for now

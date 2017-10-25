@@ -32,12 +32,12 @@ class PerMaTest extends Specification {
         def perMa = WritabePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         when:
-        perMa.map().putAll(map)
+        perMa.putAll(map)
         perMa.persist()
         def perMaReread = WritabePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         then:
-        perMaReread.map().equals(map)
+        perMaReread.equals(map)
 
         where:
         map                                               | keySerializer | valueSerializer
@@ -57,12 +57,12 @@ class PerMaTest extends Specification {
         def perMa = WritabePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         when:
-        perMa.map().putAll(map)
+        perMa.putAll(map)
         perMa.persist()
         def perMaReread = WritabePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         then:
-        perMaReread.map()['key'].equals(expected)
+        perMaReread['key'].equals(expected)
 
         where:
         nr | map                                                        | valueSerializer                       || expected
@@ -79,12 +79,12 @@ class PerMaTest extends Specification {
         def perMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        perMa.map().putAll(map)
+        perMa.putAll(map)
         perMa.persist();
         def perMaReread = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.map().equals(map)
+        perMaReread.equals(map)
     }
 
     def "write read readOnly string map"() {
@@ -93,12 +93,12 @@ class PerMaTest extends Specification {
         def perMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        perMa.map().putAll(map)
+        perMa.putAll(map)
         perMa.persist()
         def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.map().equals(map)
+        perMaReread.equals(map)
     }
 
     def "read readOnly string2String no files"() {
@@ -106,7 +106,7 @@ class PerMaTest extends Specification {
         def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.map().equals([:])
+        perMaReread.equals([:])
     }
 
     @Unroll
@@ -115,16 +115,16 @@ class PerMaTest extends Specification {
         def writablePerMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        writablePerMa.map().putAll(initial)
+        writablePerMa.putAll(initial)
         writablePerMa.persist()
         def readOnlyPerMa = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
-        writablePerMa.map().clear()
-        writablePerMa.map().putAll(update)
+        writablePerMa.clear()
+        writablePerMa.putAll(update)
         writablePerMa.persist()
         readOnlyPerMa.refresh()
 
         then:
-        readOnlyPerMa.map().equals(update)
+        readOnlyPerMa.equals(update)
 
         where:
         initial                                            | update
@@ -141,21 +141,21 @@ class PerMaTest extends Specification {
         def writablePerMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        writablePerMa.map().putAll(['foo':FOO])
+        writablePerMa.putAll(['foo':FOO])
         writablePerMa.persist()
         def readOnlyPerMa = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
         [['foo':FOO, 'N I X':NIX],
          ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING],
          ['N I X':NIX, 'long store':LONG_STRING]].forEach {
-            writablePerMa.map().clear()
-            writablePerMa.map().putAll(it)
+            writablePerMa.clear()
+            writablePerMa.putAll(it)
             writablePerMa.persist()
         }
         writablePerMa.compact()
         readOnlyPerMa.refresh()
 
         then:
-        readOnlyPerMa.map().equals(['N I X':NIX, 'long store':LONG_STRING])
+        readOnlyPerMa.equals(['N I X':NIX, 'long store':LONG_STRING])
     }
 
     def "write compact reread string map"() {
@@ -168,14 +168,14 @@ class PerMaTest extends Specification {
          ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING],
          ['N I X':NIX, 'long store':LONG_STRING]].forEach {
             perMa.persist()
-            perMa.map().clear()
-            perMa.map().putAll(it)
+            perMa.clear()
+            perMa.putAll(it)
         }
         perMa.compact()
         def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
 
         then:
-        perMa.map().equals(['N I X':NIX, 'long store':LONG_STRING])
-        perMaReread.map().equals(['N I X':NIX, 'long store':LONG_STRING])
+        perMa.equals(['N I X':NIX, 'long store':LONG_STRING])
+        perMaReread.equals(['N I X':NIX, 'long store':LONG_STRING])
     }
 }

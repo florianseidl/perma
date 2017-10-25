@@ -5,6 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.KeyOrValueSerializer;
+import com.google.common.collect.ForwardingSet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
@@ -20,15 +21,15 @@ import static ch.sbb.perma.datastore.NullValueSerializer.NULL;
 import static ch.sbb.perma.datastore.NullValueSerializer.NULL_OBJECT;
 
 /**
- * A container for a mutable persistent set.
+ * A mutable persistent set.
  * <p>
- *   Is the public PerMa API for mutable sets. Load and store a persisted sets.
+ *   Is the public Writeable API for mutable sets. Load and store a persisted sets.
  * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritabePerMaSet<T> implements PerMaSet<T> {
+public class WritabePerMaSet<T> extends ForwardingSet<T> implements Writeable {
     private final static Logger LOG = LoggerFactory.getLogger(WritabePerMaSet.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();
@@ -85,12 +86,12 @@ public class WritabePerMaSet<T> implements PerMaSet<T> {
         }
     }
 
-    @Override
-    public Set<T> set() {
-        return set;
-    }
-
     private static <T> ImmutableMap<T, Object> setAsMap(Set<T> set) {
         return Maps.toMap(set, key -> NULL_OBJECT);
+    }
+
+    @Override
+    protected Set<T> delegate() {
+        return set;
     }
 }

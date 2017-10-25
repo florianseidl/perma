@@ -24,14 +24,14 @@ WritablePerMa perMa = WritabePerMa.loadOrCreate(tempDir,
                                                 "mymap", 
                                                 KeyOrValueSerializer.INTEGER, 
                                                 KeyOrValueSerializer.STRING)
-perMa.map().put(...)
+perMa.put(...)
 ....
 perma.persist()
 ```
 ```java
 ReadOnlyPerMa perMa = ReadOnlyPerMa.loadStringMap(tempDir, 
                                                   "mymap")
-perMa.map().get(...)
+perMa.get(...)
 ....
 perma.update()
 ```
