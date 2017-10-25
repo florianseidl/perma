@@ -59,10 +59,11 @@ PerMa files use a proprietary binary format.
 
 Each file starts with a header:
 
+```
 5 bytes  | 2 bytes | 1 byt e  | 16 bytes  | 4 bytes     | name length bytes | 8 bytes  | 4 bytes
 ---------|---------|-----------------------------------------------------------------------------
 marker(1)| version | UUID (3) | number(4) | name length | name in UTF-8     | CRC32(5) | map size
-
+```
 (1): File marker: "PerMa" in UTF-8
 (2): Full (Wert 0)or Delta (Wert 1)
 (3): Die UUID marks the full file this file belongs to
@@ -71,10 +72,11 @@ marker(1)| version | UUID (3) | number(4) | name length | name in UTF-8     | CR
 
 And then many records:
 
+```
 1 byte   | 1 byte  | 4 bytes    | key length bytes | 4 bytes      | value lenght bytes | 8 bytes
 ---------|---------|-----------------------------------------------------------------------------
 marker(a)| type(b) | key length | serialzed key    | value length | serialzed value    | CRC32(c)
-
+```
 (a): Record marker (Wert F5 Hex)
 (b): Record type new/updated (Wert 0) or deleted (Wert 1)
 (c): CRC32 of (type, key length, key, value length, value) as bytes 
