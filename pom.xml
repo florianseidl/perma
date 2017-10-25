@@ -107,4 +107,15 @@
 		</plugins>
 	</build>
 
+	<distributionManagement>
+		<repository>
+			<id>repo</id>
+			<url>http://repo.sbb.ch/content/repositories/hosted.pz_touri_libs.releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>repo</id>
+			<url>http://repo.sbb.ch/content/repositories/hosted.pz_touri_libs.snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 </project>

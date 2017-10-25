@@ -166,7 +166,7 @@ class PerMaIT extends Specification {
             @Override
             void run() {
                 (1..readsInThread).forEach {
-                    perMaReadOnly.udpate()
+                    perMaReadOnly.refresh()
                 }
             }
         }
