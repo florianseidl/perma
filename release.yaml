@@ -1,0 +1,6 @@
+#
+# Copyright (C) Schweizerische Bundesbahnen SBB, 2016.
+# Properties of the release build
+#
+# Empty release.yaml to enable release build without openshift deployment
+autorelease: false
