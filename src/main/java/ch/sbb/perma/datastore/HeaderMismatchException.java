@@ -6,10 +6,10 @@ package ch.sbb.perma.datastore;
 
 /**
  * Header does not match the expectation.
- * <p>
+ * <ul>
  *     <li>Sequence of delta files is not correct</li>
  *     <li>Delta file does not belong to the given full file</li>
- * </p>
+ * </ul>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.

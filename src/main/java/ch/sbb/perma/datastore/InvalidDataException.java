@@ -6,11 +6,11 @@ package ch.sbb.perma.datastore;
 
 /**
  * File format of read PerMa file is not valid.
- * <p>
+ * <ul>
  *     <li>Invalid file or record marker</li>
  *     <li>CRC32 Checksum error in file header</li>
  *     <li>CRC32 Checksum error in record header</li>
- * </p>
+ * </ul>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
