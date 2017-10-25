@@ -16,7 +16,8 @@ import java.util.Map;
 /**
  * A snapshot of a map that was never persisted.
  * <p>
- * Knows how create a new persisted snapshot of the map.
+ *      Create a new persisted snapshot of the map.
+ * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.

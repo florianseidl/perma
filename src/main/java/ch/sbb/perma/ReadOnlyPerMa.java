@@ -5,6 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.KeyOrValueSerializer;
+import com.google.common.collect.ForwardingMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,13 +17,13 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Read only persistent map.
  * <p>
- *     Is the public PerMa API for immutable maps. Loads a persisted map and updates it on request.
+ *     Is the public Writeable API for immutable maps. Loads a persisted map and updates it on request.
  * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class ReadOnlyPerMa<K,V> implements PerMa<K,V> {
+public class ReadOnlyPerMa<K,V> extends ForwardingMap<K,V> implements Refreshable {
     private final static Logger LOG = LoggerFactory.getLogger(ReadOnlyPerMa.class);
 
     private MapSnapshot<K,V> lastLoaded;
@@ -43,7 +44,7 @@ public class ReadOnlyPerMa<K,V> implements PerMa<K,V> {
                                               String name,
                                               KeyOrValueSerializer<K> keySerializer,
                                               KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        LOG.info("Loading readonly PerMa {} from directory {}", name, dir);
+        LOG.info("Loading readonly Writeable {} from directory {}", name, dir);
         return new ReadOnlyPerMa<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 
@@ -59,9 +60,8 @@ public class ReadOnlyPerMa<K,V> implements PerMa<K,V> {
         }
     }
 
-
     @Override
-    public Map<K, V> map() {
+    protected Map<K, V> delegate() {
         return lastLoaded.asImmutableMap();
     }
 }
