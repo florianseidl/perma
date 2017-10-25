@@ -47,7 +47,7 @@ public class ReadOnlyPerMa<K,V> implements PerMa<K,V> {
         return new ReadOnlyPerMa<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 
-    public void udpate() throws IOException {
+    public void refresh() throws IOException {
         try {
             loadLock.lock();
             LOG.debug("Updating map");

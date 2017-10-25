@@ -190,6 +190,57 @@ class PerMaIT extends Specification {
         250    | 250   | 500     | 25           | 25
     }
 
+    @Unroll
+    @Timeout(value = 2, unit = TimeUnit.MINUTES)
+    def "write comapct #threads write threads #compactThreads compact threads"() {
+        given:
+        def perMa = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+
+        when:
+        def writer = new Runnable() {
+            @Override
+            void run() {
+                (1..250).forEach {
+                    def writeNr = it
+                    (1..250).forEach {
+                        if(it*writeNr % 3 == 0) {
+                            perMa.map().remove("entry_$it")
+                        }
+                        else {
+                            perMa.map().put("entry_$it" as String, randomUUID().toString())
+                        }
+                    }
+                    println("write $it, mapSize ${perMa.map().size()}")
+                    perMa.persist();
+                }
+            }
+        }
+        def compactor = new Runnable() {
+            @Override
+            void run() {
+                (1..250).forEach {
+                    perMa.compact()
+                }
+            }
+        }
+        runMultithreaded(perMa, threads, writer)
+        runMultithreaded(perMa, threads, compactor)
+        def perMaReRead = reRead()
+        def lastSize = perMa.map().size()
+        def perMaReReadSize = perMaReRead.map().size()
+        def diff = diff(perMa, perMaReRead)
+
+        then:
+        lastSize == perMaReReadSize
+        diffIsEmpty(diff)
+
+        where:
+        threads | compactThreads
+        1       | 1
+        10      | 1
+        1       | 10
+        10      | 10
+    }
 
     def runMultithreaded(perMa, threads, Runnable runable) {
         def threadList = (1..threads).collect {

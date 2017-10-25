@@ -8,9 +8,11 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,7 +68,7 @@ class FileGroup {
         this.deltaFileNames = deltaFileNames;
     }
 
-    public static FileGroup list(File dir, String name) throws FileNotFoundException {
+    static FileGroup list(File dir, String name) throws FileNotFoundException {
         return latestFullFileName(dir, name)
                 .map(latestFullFileName -> new FileGroup(dir,
                                                             name,
@@ -75,7 +77,7 @@ class FileGroup {
                 .orElse(new FileGroup(dir, name, null, ImmutableList.of()));
     }
 
-    public FileGroup refresh() throws FileNotFoundException {
+    FileGroup refresh() throws FileNotFoundException {
         return list(dir, name);
     }
 
@@ -86,9 +88,13 @@ class FileGroup {
     File fullFile() throws FileNotFoundException {
         if(fullFileName == null) {
             throw new FileNotFoundException(
-                        String.format("No file for perma %s found in %s",name, dir));
+                        String.format("No file for perma %s found in %s", name, dir));
         }
         return toFile(fullFileName);
+    }
+
+    boolean hasSameFullFileAs(FileGroup other) {
+        return Objects.equals(fullFileName, other.fullFileName);
     }
 
     File latestDeltaFile() throws FileNotFoundException {
@@ -106,21 +112,20 @@ class FileGroup {
     }
 
 
-    private List<String> fileNamesSince(FileGroup previousFiles) {
+    List<File> deltaFilesSince(FileGroup previousFiles) {
+         return deltaFileNamesSince(previousFiles)
+                        .stream()
+                        .map(this::toFile)
+                        .collect(Collectors.toList());
+    }
+
+    private List<String> deltaFileNamesSince(FileGroup previousFiles) {
         if(previousFiles.deltaFileNames.isEmpty()) {
             return deltaFileNames;
         }
         return deltaFileNames.subList(
-                        previousFiles.deltaFileNames.size(),
-                        deltaFileNames.size());
-    }
-
-
-    public List<File> deltaFilesSince(FileGroup previousFiles) {
-         return fileNamesSince(previousFiles)
-                        .stream()
-                        .map(this::toFile)
-                        .collect(Collectors.toList());
+                previousFiles.deltaFileNames.size(),
+                deltaFileNames.size());
     }
 
     FileGroup withNextFull() {
@@ -145,6 +150,18 @@ class FileGroup {
                                             .addAll(deltaFileNames)
                                             .add(String.format(FILE_FORMAT, name, latestFullFileNumber, latestDeltaFileNumber + 1))
                                             .build());
+    }
+
+    boolean delete() throws IOException {
+        if(!exists()) {
+            return false;
+        }
+        boolean deleted = fullFile().delete();
+        for(File deltaFile : deltaFiles()) {
+            boolean deletedDelta = deltaFile.delete();
+            deleted = deleted || deletedDelta;
+        }
+        return deleted;
     }
 
     private File toFile(String fileName) {

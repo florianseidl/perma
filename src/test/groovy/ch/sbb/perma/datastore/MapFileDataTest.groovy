@@ -11,7 +11,7 @@ import spock.lang.Unroll
 
 import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING
 
-class MapDataTest extends Specification {
+class MapFileDataTest extends Specification {
     private static final UUID uuid = UUID.fromString("d4b89e8b-49d8-4c36-a798-942fb025a402");
     private static final String NAME = "testmap";
     private static String VALUE_A = 'value A'
@@ -30,7 +30,7 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, 1),
+        new MapFileData(Header.newFullHeader(NAME, 1),
                     ImmutableMap.copyOf(['A': VALUE_A]),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
@@ -46,11 +46,11 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, map.size()),
+        new MapFileData(Header.newFullHeader(NAME, map.size()),
                     ImmutableMap.copyOf(map),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
-        def reread = MapData.readFrom(
+        def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
                 STRING)
@@ -68,11 +68,11 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, 2),
+        new MapFileData(Header.newFullHeader(NAME, 2),
                     ImmutableMap.copyOf(['A':VALUE_A, 'B':VALUE_B]),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
-        MapData.readFrom(
+        MapFileData.readFrom(
                 new ByteArrayInputStream(manipulate(out.toByteArray(),
                                          length(Header.newFullHeader(NAME, 2)) + b)),
                 STRING,
@@ -97,11 +97,11 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, deleted.size()),
+        new MapFileData(Header.newFullHeader(NAME, deleted.size()),
                     ImmutableMap.of(),
                     ImmutableSet.copyOf(deleted as Set))
                 .writeTo(out, STRING, STRING)
-        def reread = MapData.readFrom(
+        def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
                 STRING)
@@ -124,11 +124,11 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, newOrUpdated.size() + deleted.size()),
+        new MapFileData(Header.newFullHeader(NAME, newOrUpdated.size() + deleted.size()),
                     ImmutableMap.copyOf(newOrUpdated),
                     ImmutableSet.copyOf(deleted as Set))
                 .writeTo(out, STRING, STRING)
-        def reread = MapData.readFrom(
+        def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
                 STRING)
@@ -146,7 +146,7 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, 1),
+        new MapFileData(Header.newFullHeader(NAME, 1),
                     ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
@@ -160,7 +160,7 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME, 2),
+        new MapFileData(Header.newFullHeader(NAME, 2),
                 ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
                 ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
@@ -168,7 +168,7 @@ class MapDataTest extends Specification {
         Header.newFullHeader(NAME, 1).writeTo(otherOut)
         def merged = out.toByteArray()
         mergeByteArrays(otherOut.toByteArray(), merged)
-        MapData.readFrom(
+        MapFileData.readFrom(
                 new ByteArrayInputStream(merged),
                 STRING,
                 STRING)
@@ -189,7 +189,7 @@ class MapDataTest extends Specification {
 
     def toStringIsImplemented() {
         when:
-        def mapDataToString = new MapData(
+        def mapDataToString = new MapFileData(
                 Header.newFullHeader(NAME, 2),
                 ImmutableMap.of('A', VALUE_A),
                 ImmutableSet.of('C'))

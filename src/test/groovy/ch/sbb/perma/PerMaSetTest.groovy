@@ -104,4 +104,25 @@ class PerMaSetTest extends Specification {
         [] as Set                                   | [] as Set
         [] as Set                                   | ['foo', 'N I X', 'nix als bledsinn'] as Set
     }
+
+    def "write compact reread string set"() {
+        given:
+        def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testmap")
+
+        when:
+        [['foo'],
+         ['foo', 'N I X'],
+         ['foo', 'N I X', 'long store'],
+         ['N I X', 'long store']].forEach {
+            perMaSet.persist()
+            perMaSet.set().clear()
+            perMaSet.set().addAll(it)
+        }
+        perMaSet.compact()
+        def perMaRereadSet = ReadOnlyPerMaSet.loadStringSet(tempDir, "testmap")
+
+        then:
+        perMaSet.set().equals(['N I X','long store'] as Set)
+        perMaRereadSet.set().equals(['N I X','long store'] as Set)
+    }
 }
