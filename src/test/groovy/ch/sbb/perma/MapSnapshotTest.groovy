@@ -85,7 +85,6 @@ class MapSnapshotTest extends Specification {
         [99999L : Long.MIN_VALUE]               | LONG          | LONG
     }
 
-
     @Unroll
     def "many persisted states #stateKeys"() {
         given:
@@ -107,7 +106,7 @@ class MapSnapshotTest extends Specification {
         states << [[['A':VALUE_A]],
                    [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]],
                    [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A, 'C':VALUE_C]],
-                   [['A':VALUE_A, 'B':VALUE_B], [:]],
+                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A, 'C':VALUE_C], [:]],
                    [[:],['A':VALUE_A, 'B':VALUE_B]]]
         stateKeys = states.collect{it.keySet()}
     }
@@ -127,7 +126,7 @@ class MapSnapshotTest extends Specification {
         firstDelta.delete()
         secondDelta.renameTo(firstDelta)
 
-        PersistendMapSnapshot.load(FileGroup.list(tempDir, 'foo'), STRING, STRING)
+        PersistedMapSnapshot.load('foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
 
         then:
         thrown HeaderMismatchException
@@ -141,15 +140,15 @@ class MapSnapshotTest extends Specification {
                 'bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
 
         when:
-        newSnapshotFoo.writeNext(['A':VALUE_A]).writeNext(['C':VALUE_C])
-        newSnapshotBar.writeNext(['A':VALUE_A]).writeNext(['C':VALUE_C]).writeNext(['C':VALUE_C, 'B':VALUE_B]);
+        newSnapshotFoo.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C])
+        newSnapshotBar.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C]).writeNext(['A':VALUE_A,'C':VALUE_C, 'B':VALUE_B]);
 
         File firstFooDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
         File lastBarDelta = FileGroup.list(tempDir, 'bar').deltaFiles()[1]
         lastBarDelta.delete()
         firstFooDelta.renameTo(lastBarDelta)
 
-        PersistendMapSnapshot.load(FileGroup.list(tempDir, 'bar'), STRING, STRING)
+        PersistedMapSnapshot.load('bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
 
         then:
         thrown HeaderMismatchException
@@ -161,14 +160,14 @@ class MapSnapshotTest extends Specification {
                 'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
 
         when:
-        newSnapshot.writeNext(['A':VALUE_A]).writeNext(['B':VALUE_B])
+        newSnapshot.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A, 'B':VALUE_B])
 
         def files = FileGroup.list(tempDir, 'foo')
         def firstDelta = files.deltaFiles()[0]
         files.fullFile().delete()
         firstDelta.renameTo(files.fullFile())
 
-        PersistendMapSnapshot.load(FileGroup.list(tempDir, 'foo'), STRING, STRING)
+        PersistedMapSnapshot.load('foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
 
         then:
         thrown HeaderMismatchException
@@ -179,7 +178,7 @@ class MapSnapshotTest extends Specification {
         def files = FileGroup.list(tempDir, 'foo')
 
         when:
-        PersistendMapSnapshot.load(files, STRING, STRING)
+        PersistedMapSnapshot.load('foo', files, STRING, STRING)
 
         then:
         thrown FileNotFoundException
@@ -211,4 +210,127 @@ class MapSnapshotTest extends Specification {
                 [:]]
     }
 
+    @Unroll
+    def "many persisted states and compact #stateKeys"() {
+        given:
+        def next = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+
+        when:
+        for(def state : states) {
+            next = next.writeNext(state)
+        }
+        def compacted = next.compact()
+        def filesAfterCompact = FileGroup.list(tempDir, 'foo')
+        def deltaFilesAfterCompact = filesAfterCompact.deltaFiles().size()
+        def existsAfterCompact = filesAfterCompact.exists()
+
+        then:
+        compacted.asImmutableMap().equals(states[states.size() - 1])
+        existsAfterCompact
+        deltaFilesAfterCompact == 0
+
+        where:
+        states << [[['A':VALUE_A]],
+                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]],
+                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A, 'C':VALUE_C]],
+                   [[:],['A':VALUE_A, 'B':VALUE_B]]]
+        stateKeys = states.collect{ it.keySet() }
+    }
+
+    def "no file ever persisted no compact no file empty"() {
+        given:
+        def next = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+
+        when:
+        next = next.writeNext([:])
+        def compacted = next.compact()
+        def existsAfterCompact = FileGroup.list(tempDir, 'foo').exists()
+
+        then:
+        compacted.asImmutableMap().isEmpty()
+        !existsAfterCompact
+    }
+
+    def "no compact empty after delete all"() {
+        given:
+        def next = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+
+        when:
+        for(def state : [['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C],[:]]) {
+            next = next.writeNext(state)
+        }
+        def fullFileBeforeCompact = FileGroup.list(tempDir, 'foo').fullFile()
+        def compacted = next.compact()
+        def fullFileAfterCompact = FileGroup.list(tempDir, 'foo').fullFile()
+
+        then:
+        compacted.asImmutableMap().isEmpty()
+        fullFileAfterCompact != fullFileBeforeCompact
+        compacted.asImmutableMap().isEmpty()
+    }
+
+    @Unroll
+    def "autocompact #stateKeys"() {
+        given:
+        def next = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+
+        when:
+        for(def state : states) {
+            next = next.writeNext(state)
+        }
+        def filesAfterCompact = FileGroup.list(tempDir, 'foo')
+        def deltaFilesAfterCompact = filesAfterCompact.deltaFiles().size()
+        def existsAfterCompact = filesAfterCompact.exists()
+
+        then:
+        next.asImmutableMap().equals(states[states.size() - 1])
+        existsAfterCompact
+        (deltaFilesAfterCompact == 0) == compacted
+
+        where:
+        states                                                                  || compacted
+        [['A':VALUE_A],[:]]                                                     || true
+        [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C],[:]]            || true
+        [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A]] || true
+        [['A':VALUE_A, 'B':VALUE_B],['A':VALUE_A]]                              || true
+        [['A':VALUE_A],['A':VALUE_A, 'B':VALUE_B]]                              || false
+        [['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A,'B':VALUE_B]]    || false
+        [['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_B,'B':VALUE_C]]    || true
+        [['A':VALUE_A, 'B':VALUE_B],['A':VALUE_A, 'C':VALUE_C]]                 || true
+        stateKeys = states.collect{ it.keySet() }
+    }
+
+    @Unroll
+    def "key or value serializer null"() {
+        when:
+        MapSnapshot.loadOrCreate(
+                tempDir,
+                'foo',
+                keySerializer,
+                valueSerialzer)
+
+        then:
+        thrown NullPointerException
+
+        where:
+        keySerializer  | valueSerialzer
+        STRING         | null
+        null           | STRING
+    }
 }

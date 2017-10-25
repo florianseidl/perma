@@ -33,15 +33,18 @@ interface MapSnapshot<K, V> {
                     keySerializer,
                     valueSerializer);
         }
-        return PersistendMapSnapshot.load(
+        return PersistedMapSnapshot.load(
+                name,
                 files,
                 keySerializer,
                 valueSerializer);
     }
 
+    MapSnapshot<K, V> writeNext(Map<K, V> currentState) throws IOException;
+
     MapSnapshot<K,V> refresh() throws IOException;
 
-    MapSnapshot<K, V> writeNext(Map<K, V> currentState) throws IOException;
+    MapSnapshot<K,V> compact() throws IOException;
 
     ImmutableMap<K, V> asImmutableMap();
 }

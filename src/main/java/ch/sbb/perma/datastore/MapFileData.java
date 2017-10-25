@@ -26,29 +26,29 @@ import java.util.UUID;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class MapData<K,V> {
+public class MapFileData<K,V> {
     private final static String TEMP_FILE_FORMAT = "%s.temp";
 
     private final Header header;
     private final ImmutableMap<K,V> newAndUpdated;
     private final ImmutableSet<K> deleted;
 
-    MapData(Header mapFileHeader, ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
+    MapFileData(Header mapFileHeader, ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
         this.header = mapFileHeader;
         this.newAndUpdated = newAndUpdated;
         this.deleted = deleted;
     }
 
-    public static <K,V> MapData<K,V> createNewFull(String name, ImmutableMap<K,V> current) {
-        return new MapData<K,V>(Header.newFullHeader(name, current.size()), current, ImmutableSet.of());
+    public static <K,V> MapFileData<K,V> createNewFull(String name, ImmutableMap<K,V> current) {
+        return new MapFileData<K,V>(Header.newFullHeader(name, current.size()), current, ImmutableSet.of());
     }
 
-    public static <K,V> MapData<K,V> readFileGroupAndCollect(File fullFile,
-                                                             List<File> deltaFiles,
-                                                             KeyOrValueSerializer<K> keySerializer,
-                                                             KeyOrValueSerializer<V> valueSerializer,
-                                                             Map<K,V> collector) throws IOException {
-        MapData<K,V> latestData = MapData.readFrom(fullFile, keySerializer, valueSerializer)
+    public static <K,V> MapFileData<K,V> readFileGroupAndCollect(File fullFile,
+                                                                 List<File> deltaFiles,
+                                                                 KeyOrValueSerializer<K> keySerializer,
+                                                                 KeyOrValueSerializer<V> valueSerializer,
+                                                                 Map<K,V> collector) throws IOException {
+        MapFileData<K,V> latestData = MapFileData.readFrom(fullFile, keySerializer, valueSerializer)
                     .addTo(collector);
         if(!latestData.header.isFullFile()) {
             throw new HeaderMismatchException(
@@ -60,14 +60,14 @@ public class MapData<K,V> {
         return latestData;
     }
 
-    private static <K, V> MapData<K, V> readDeltaFilesAndCollect(List<File> deltaFiles,
-                                                                KeyOrValueSerializer<K> keySerializer,
-                                                                KeyOrValueSerializer<V> valueSerializer,
-                                                                MapData<K, V> previousData,
-                                                                Map<K, V> collector) throws IOException {
-        MapData latestData = previousData;
+    private static <K, V> MapFileData<K, V> readDeltaFilesAndCollect(List<File> deltaFiles,
+                                                                     KeyOrValueSerializer<K> keySerializer,
+                                                                     KeyOrValueSerializer<V> valueSerializer,
+                                                                     MapFileData<K, V> previousData,
+                                                                     Map<K, V> collector) throws IOException {
+        MapFileData latestData = previousData;
         for(File deltaFile : deltaFiles) {
-            MapData next = MapData
+            MapFileData next = MapFileData
                     .readFrom(deltaFile, keySerializer, valueSerializer)
                     .addTo(collector);
             if (!next.header.isNextDeltaFileOf(latestData.header)) {
@@ -81,18 +81,18 @@ public class MapData<K,V> {
         return latestData;
     }
 
-    private static <K,V> MapData<K,V> readFrom(File file,
-                                       KeyOrValueSerializer<K> keySerializer,
-                                       KeyOrValueSerializer<V> valueSerializer) throws IOException {
+    private static <K,V> MapFileData<K,V> readFrom(File file,
+                                                   KeyOrValueSerializer<K> keySerializer,
+                                                   KeyOrValueSerializer<V> valueSerializer) throws IOException {
         try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
             return readFrom(in, keySerializer, valueSerializer);
         }
     }
 
 
-    static <K,V> MapData<K,V> readFrom(InputStream input,
-                                       KeyOrValueSerializer<K> keySerializer,
-                                       KeyOrValueSerializer<V> valueSerializer) throws IOException {
+    static <K,V> MapFileData<K,V> readFrom(InputStream input,
+                                           KeyOrValueSerializer<K> keySerializer,
+                                           KeyOrValueSerializer<V> valueSerializer) throws IOException {
         ImmutableMap.Builder<K,V> newOrUpdated = new ImmutableMap.Builder<>();
         ImmutableSet.Builder<K> deleted = new ImmutableSet.Builder<>();
         try (BufferedInputStream in = new BufferedInputStream(input)) {
@@ -109,33 +109,33 @@ public class MapData<K,V> {
             if(!header.hasSize(count)) {
                 throw new HeaderMismatchException("Invalid size, mismatch between header and stored size");
             }
-            return new MapData(header, newOrUpdated.build(), deleted.build());
+            return new MapFileData(header, newOrUpdated.build(), deleted.build());
         }
     }
 
-    public MapData<K,V> updateWithDeltasAndCollect(List<File> additionalDeltaFiles,
-                                                   KeyOrValueSerializer<K> keySerializer,
-                                                   KeyOrValueSerializer<V> valueSerializer,
-                                                   Map<K,V> collector) throws IOException {
+    public MapFileData<K,V> updateWithDeltasAndCollect(List<File> additionalDeltaFiles,
+                                                       KeyOrValueSerializer<K> keySerializer,
+                                                       KeyOrValueSerializer<V> valueSerializer,
+                                                       Map<K,V> collector) throws IOException {
         return readDeltaFilesAndCollect(additionalDeltaFiles, keySerializer, valueSerializer, this, collector);
     }
 
-    public MapData<K,V> writeTo(File file,
-                         KeyOrValueSerializer<K> keySerializer,
-                         KeyOrValueSerializer<V> valueSerializer) throws IOException {
+    public MapFileData<K,V> writeTo(File file,
+                                    KeyOrValueSerializer<K> keySerializer,
+                                    KeyOrValueSerializer<V> valueSerializer) throws IOException {
         File tempFile = createTempFileFor(file);
-        MapData<K,V> mapData = writeToTempFile(tempFile, keySerializer, valueSerializer);
+        MapFileData<K,V> mapFileData = writeToTempFile(tempFile, keySerializer, valueSerializer);
         if(!tempFile.renameTo(file)) {
             throw new FileRenameException(String.format("Could not rename temporary file %s to perma set file %s",
                     tempFile,
                     file));
         }
-        return mapData;
+        return mapFileData;
     }
 
-    private MapData<K,V> writeToTempFile(File tempFile,
-                                KeyOrValueSerializer<K> keySerializer,
-                                KeyOrValueSerializer<V> valueSerializer) throws IOException {
+    private MapFileData<K,V> writeToTempFile(File tempFile,
+                                             KeyOrValueSerializer<K> keySerializer,
+                                             KeyOrValueSerializer<V> valueSerializer) throws IOException {
         try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             return writeTo(out, keySerializer, valueSerializer);
         }
@@ -145,9 +145,9 @@ public class MapData<K,V> {
         return new File(targetFile.getParent(), String.format(TEMP_FILE_FORMAT, UUID.randomUUID()));
     }
 
-    MapData<K,V> writeTo(OutputStream output,
-                         KeyOrValueSerializer<K> keySerializer,
-                         KeyOrValueSerializer<V> valueSerializer) throws IOException {
+    MapFileData<K,V> writeTo(OutputStream output,
+                             KeyOrValueSerializer<K> keySerializer,
+                             KeyOrValueSerializer<V> valueSerializer) throws IOException {
         try (OutputStream out = new BufferedOutputStream(output)) {
             header.writeTo(out);
             for(Map.Entry<K,V> entry : newAndUpdated.entrySet()) {
@@ -168,24 +168,19 @@ public class MapData<K,V> {
         return this;
     }
 
-    public MapData<K,V> nextDelta(ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
-        return new MapData<>(header.nextDelta(newAndUpdated.size() + deleted.size()), newAndUpdated, deleted);
+    public MapFileData<K,V> nextDelta(ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
+        return new MapFileData<>(header.nextDelta(newAndUpdated.size() + deleted.size()), newAndUpdated, deleted);
     }
 
-    MapData<K,V> addTo(Map<K,V> map) {
+    MapFileData<K,V> addTo(Map<K,V> map) {
         map.putAll(newAndUpdated);
         deleted.forEach(map::remove);
         return this;
     }
 
-    public boolean isEmpty() {
-        return newAndUpdated.isEmpty() && deleted.isEmpty();
-    }
-
-
     @Override
     public String toString() {
-        return "MapData{" +
+        return "MapFileData{" +
                 "header=" + header +
                 ", newAndUpdated=" + newAndUpdated +
                 ", deleted=" + deleted +

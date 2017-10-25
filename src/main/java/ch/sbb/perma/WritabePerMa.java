@@ -57,12 +57,26 @@ public class WritabePerMa<K,V> implements PerMa<K,V> {
             persistLock.lock();
             LOG.debug("Persisting map");
             this.lastPersisted = lastPersisted.writeNext(map);
-            LOG.debug("Persisted map to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+            LOG.info("Persisted map to snapshot with {} entries", lastPersisted.asImmutableMap().size());
         }
         finally {
             persistLock.unlock();
         }
     }
+
+    public void compact() throws IOException {
+        try {
+            persistLock.lock();
+            persist();
+            LOG.debug("Compacting map");
+            this.lastPersisted = lastPersisted.compact();
+            LOG.info("Compacted map to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+        }
+        finally {
+            persistLock.unlock();
+        }
+    }
+
 
     public Map<K,V> map() {
         return map;

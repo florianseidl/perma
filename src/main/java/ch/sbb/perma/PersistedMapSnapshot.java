@@ -5,7 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.KeyOrValueSerializer;
-import ch.sbb.perma.datastore.MapData;
+import ch.sbb.perma.datastore.MapFileData;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
@@ -30,39 +30,44 @@ import java.util.stream.Collectors;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class PersistendMapSnapshot<K,V> implements MapSnapshot<K,V> {
+class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
     private static final Logger LOG = LoggerFactory.getLogger(MapSnapshot.class);
 
+    private final String name;
     private final FileGroup files;
     private final ImmutableMap<K,V> mapSnapshot;
-    private final MapData<K,V> persited;
+    private final MapFileData<K,V> persited;
     private final KeyOrValueSerializer<K> keySerializer;
     private final KeyOrValueSerializer<V> valueSerializer;
 
-    PersistendMapSnapshot(FileGroup directorySnapshot,
-                          ImmutableMap<K, V> mapSnapshot,
-                          MapData persited,
-                          KeyOrValueSerializer<K> keySerializer,
-                          KeyOrValueSerializer<V> valueSerializer) {
-        this.files = directorySnapshot;
+    PersistedMapSnapshot(String name,
+                         FileGroup files,
+                         ImmutableMap<K, V> mapSnapshot,
+                         MapFileData persited,
+                         KeyOrValueSerializer<K> keySerializer,
+                         KeyOrValueSerializer<V> valueSerializer) {
+        this.name = name;
+        this.files = files;
         this.mapSnapshot = mapSnapshot;
         this.persited = persited;
         this.keySerializer = keySerializer;
         this.valueSerializer = valueSerializer;
     }
 
-    static <K,V> MapSnapshot<K,V> load(FileGroup latestFiles,
+    static <K,V> MapSnapshot<K,V> load(String name,
+                                       FileGroup latestFiles,
                                        KeyOrValueSerializer<K> keySerializer,
                                        KeyOrValueSerializer<V> valueSerializer) throws IOException{
-        LOG.debug("Loading persisted Snapshot from files latestFiles");
+        LOG.debug("Loading persisted Snapshot from files latestFiles {}", latestFiles);
         Map<K,V> collector = new HashMap<>();
-        MapData latestData = MapData.readFileGroupAndCollect(
+        MapFileData latestData = MapFileData.readFileGroupAndCollect(
                 latestFiles.fullFile(),
                 latestFiles.deltaFiles(),
                 keySerializer,
                 valueSerializer,
                 collector);
-        return new PersistendMapSnapshot<K,V>(
+        return new PersistedMapSnapshot<K,V>(
+                name,
                 latestFiles,
                 ImmutableMap.copyOf(collector),
                 latestData,
@@ -77,20 +82,24 @@ class PersistendMapSnapshot<K,V> implements MapSnapshot<K,V> {
 
     public MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable) throws IOException {
         FileGroup filesWithNextDeltaFile = files.withNextDelta();
-        MapData<K,V> delta = deltaTo(currentImmutable);
-        if(delta.isEmpty()) {
+        MapDifference<K,V> diff = Maps.difference(mapSnapshot, currentImmutable);
+        if(diff.areEqual()) {
             LOG.debug("Noting to write (no changes detected), ignoring");
             return this;
         }
-        MapData<K,V> nextDeltaData = delta.writeTo(
+        if(moreThanAThirdUpdatedOrDeleted(diff)) {
+            LOG.debug("More than a third of the records are added and/or deleted, compacting to full file");
+            return compactTo(currentImmutable);
+        }
+        MapFileData<K,V> nextDeltaData = toDelta(diff).writeTo(
                                                 filesWithNextDeltaFile.latestDeltaFile(),
                                                 keySerializer,
                                                 valueSerializer);
         LOG.debug("Writing delta file with size={} to file {}",
                 currentImmutable.size(),
                 filesWithNextDeltaFile.latestDeltaFile());
-
-        return new PersistendMapSnapshot<K,V>(
+        return new PersistedMapSnapshot<K,V>(
+                                name,
                                 filesWithNextDeltaFile,
                                 currentImmutable,
                                 nextDeltaData,
@@ -98,23 +107,33 @@ class PersistendMapSnapshot<K,V> implements MapSnapshot<K,V> {
                                 valueSerializer);
     }
 
+    private boolean moreThanAThirdUpdatedOrDeleted(MapDifference<K,V> diff) {
+        return ((double)diff.entriesOnlyOnLeft().size() + diff.entriesDiffering().size())
+                > (mapSnapshot.size() / 3.0);
+    }
+
     @Override
     public MapSnapshot<K, V> refresh() throws IOException {
-        FileGroup refresheFiles = files.refresh();
-        List<File> additionalDeltaFiles = refresheFiles.deltaFilesSince(files);
+        FileGroup refreshedFiles = files.refresh();
+        if(!refreshedFiles.hasSameFullFileAs(files)) { // there was a compact, reload
+            LOG.debug("Reloading instead of refresh, full file has changed");
+            return load(name, refreshedFiles, keySerializer, valueSerializer);
+        }
+        List<File> additionalDeltaFiles = refreshedFiles.deltaFilesSince(files);
         if(additionalDeltaFiles.isEmpty()) {
             LOG.debug("No new files found, cancelling refresh");
             return this;
         }
         LOG.debug("Refreshing from files {}", additionalDeltaFiles);
         Map<K,V> collector = new HashMap<>(mapSnapshot);
-        MapData<K,V> lastData = persited.updateWithDeltasAndCollect(
+        MapFileData<K,V> lastData = persited.updateWithDeltasAndCollect(
                                 additionalDeltaFiles,
                                 keySerializer,
                                 valueSerializer,
                                 collector);
-        return new PersistendMapSnapshot<K,V>(
-                                refresheFiles,
+        return new PersistedMapSnapshot<>(
+                                name,
+                                refreshedFiles,
                                 ImmutableMap.copyOf(collector),
                                 lastData,
                                 keySerializer,
@@ -122,12 +141,25 @@ class PersistendMapSnapshot<K,V> implements MapSnapshot<K,V> {
     }
 
     @Override
+    public MapSnapshot<K, V> compact() throws IOException {
+        return compactTo(mapSnapshot);
+    }
+
+    private MapSnapshot<K, V> compactTo(ImmutableMap<K,V> nextMapSnapshot) throws IOException {
+        LOG.debug("Compacting map snapshot files {}", files);
+        MapSnapshot<K,V> compactedSnapshot = new NewMapSnapshot<>(name, files, keySerializer, valueSerializer)
+                .writeNext(nextMapSnapshot);
+        LOG.debug("Deleting files {}", files);
+        files.delete();
+        return compactedSnapshot;
+    }
+
+    @Override
     public ImmutableMap<K,V> asImmutableMap() {
         return mapSnapshot;
     }
 
-    private MapData<K,V> deltaTo(Map<K,V> current) {
-        MapDifference<K,V> diff = Maps.difference(mapSnapshot, current);
+    private MapFileData<K,V> toDelta(MapDifference<K,V> diff) {
         Set<K> deleted = diff.entriesOnlyOnLeft().keySet();
         Map<K,V> newEntries = diff.entriesOnlyOnRight();
         Map<K,V> modifiedEntries =

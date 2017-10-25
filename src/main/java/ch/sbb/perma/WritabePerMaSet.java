@@ -65,7 +65,20 @@ public class WritabePerMaSet<T> implements PerMaSet<T> {
             persistLock.lock();
             LOG.debug("Persisting set");
             this.lastPersisted = lastPersisted.writeNext(setAsMap(set));
-            LOG.debug("Persisted set to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+            LOG.info("Persisted set to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+        }
+        finally {
+            persistLock.unlock();
+        }
+    }
+
+    public void compact() throws IOException {
+        try {
+            persistLock.lock();
+            persist();
+            LOG.debug("Compacting set");
+            this.lastPersisted = lastPersisted.compact();
+            LOG.info("Compacted set to snapshot with {} entries", lastPersisted.asImmutableMap().size());
         }
         finally {
             persistLock.unlock();

@@ -47,12 +47,12 @@ public class ReadOnlyPerMa<K,V> implements PerMa<K,V> {
         return new ReadOnlyPerMa<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 
-    public void udpate() throws IOException {
+    public void refresh() throws IOException {
         try {
             loadLock.lock();
-            LOG.debug("Updating map");
+            LOG.debug("Refreshing map");
             lastLoaded = lastLoaded.refresh();
-            LOG.debug("Loaded map snapshot with {} entries", lastLoaded.asImmutableMap().size());
+            LOG.info("Refreshing map to snapshot with {} entries", lastLoaded.asImmutableMap().size());
         }
         finally {
             loadLock.unlock();

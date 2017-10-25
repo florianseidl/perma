@@ -169,6 +169,59 @@ class DirectoryTest extends Specification {
         ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_3.perma'] || ['foo_1_3.perma']
     }
 
+    @Unroll
+    def "delete #files"() {
+        given:
+        files.forEach {
+            touch(it)
+        }
+
+        when:
+        FileGroup
+                .list(tempDir, 'foo' )
+                .delete()
+
+        then:
+        tempDir.list() == remaining
+
+        where:
+        files                              || remaining
+        ['foo_1_0.perma']                  || []
+        ['foo_1_0.perma', 'foo_2_0.perma'] || ['foo_1_0.perma']
+        ['foo_1_0.perma','foo_1_1.perma',
+         'foo_2_0.perma','foo_2_1.perma']  || ['foo_1_0.perma','foo_1_1.perma']
+        []                                 || []
+    }
+
+    @Unroll
+    def "hasSameFullFileAs #filesA #filesB"() {
+        given:
+        filesA.forEach {
+            touch(it)
+        }
+
+        when:
+        def filesBeforeB = FileGroup.list(tempDir, 'foo' )
+        filesB.forEach {
+            touch(it)
+        }
+        def filesAfterB = FileGroup.list(tempDir, 'foo' )
+        def sameFullFile = filesAfterB.hasSameFullFileAs(filesBeforeB)
+
+        then:
+        sameFullFile == expectSameFullFile
+
+        where:
+        filesA                             | filesB                             || expectSameFullFile
+        ['foo_1_0.perma']                  | ['foo_1_0.perma']                  || true
+        ['foo_1_0.perma']                  | ['foo_1_0.perma', 'foo_1_1.perma'] || true
+        ['foo_1_0.perma', 'foo_1_1.perma'] | ['foo_1_0.perma']                  || true
+        ['foo_1_0.perma']                  | ['foo_2_0.perma']                  || false
+        []                                 | ['foo_1_0.perma']                  || false
+        []                                 | []                                 || true
+    }
+
+
     def toStringIsImplemented() {
         when:
         def fileGroupToString = FileGroup.list(tempDir, 'foo').toString()
@@ -176,6 +229,4 @@ class DirectoryTest extends Specification {
         then:
         !fileGroupToString.contains('@')
     }
-
-
 }
