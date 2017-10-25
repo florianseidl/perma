@@ -23,9 +23,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * A snapshot of a map that is persisted to PerMa files.
+ * A snapshot of a map that is persisted to Writeable files.
  * <p>
- * Knows how to load and store a complete snapshot of the map.
+ *      Load and store a complete snapshot of the map.
+ * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.

@@ -69,7 +69,7 @@ class HeaderTest extends Specification {
         when:
         Header.newFullHeader("foo",7).writeTo(out)
         def bytes = out.toByteArray()
-        bytes[10] = 0x00
+        bytes[10] = 0xF9
         Header.readFrom(new ByteArrayInputStream(bytes))
 
         then:

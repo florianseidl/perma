@@ -5,6 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.KeyOrValueSerializer;
+import com.google.common.collect.ForwardingMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,15 +17,15 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * A container for a mutable persistent map.
+ * A mutable persistent map.
  * <p>
- *     Is the public PerMa API for mutable maps. Loads and stores a persisted map.
+ *     Is the public Writeable API for mutable maps. Loads and stores a persisted map.
  * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritabePerMa<K,V> implements PerMa<K,V> {
+public class WritabePerMa<K,V> extends ForwardingMap<K,V> implements Writeable {
     private final static Logger LOG = LoggerFactory.getLogger(WritabePerMa.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();
@@ -48,7 +49,7 @@ public class WritabePerMa<K,V> implements PerMa<K,V> {
                                                   String name,
                                                   KeyOrValueSerializer<K> keySerializer,
                                                   KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        LOG.info("Loading writabe PerMa {} from directory {}", name, dir);
+        LOG.info("Loading writabe Writeable {} from directory {}", name, dir);
         return new WritabePerMa<K,V>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 
@@ -77,8 +78,8 @@ public class WritabePerMa<K,V> implements PerMa<K,V> {
         }
     }
 
-
-    public Map<K,V> map() {
+    @Override
+    protected Map<K, V> delegate() {
         return map;
     }
 }

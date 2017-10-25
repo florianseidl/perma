@@ -64,18 +64,18 @@ class PerMaIT extends Specification {
             void run() {
                 (1..writesInThread).forEach {
                     (1..mapSizeInThread).forEach {
-                        perMa.map().put(randomUUID().toString(),
+                        perMa.put(randomUUID().toString(),
                                 randomUUID().toString().multiply(50 * (it % 5 + 1)))
                     }
-                    println("write $it, mapSize ${perMa.map().size()}")
+                    println("write $it, mapSize ${perMa.size()}")
                     perMa.persist();
                 }
             }
         }
         runMultithreaded(perMa, threads, runnable)
         def perMaReRead = reRead()
-        def lastSize = perMa.map().size()
-        def perMaReReadSize = perMaReRead.map().size()
+        def lastSize = perMa.size()
+        def perMaReReadSize = perMaReRead.size()
         def diff = diff(perMa, perMaReRead)
 
         then:
@@ -109,21 +109,21 @@ class PerMaIT extends Specification {
                     def writeNr = it
                     (1..mapSizeInThread).forEach {
                         if(it*writeNr % 3 == 0) {
-                            perMa.map().remove("entry_$it")
+                            perMa.remove("entry_$it")
                         }
                         else {
-                            perMa.map().put("entry_$it" as String, randomUUID().toString())
+                            perMa.put("entry_$it" as String, randomUUID().toString())
                         }
                     }
-                    println("write $it, mapSize ${perMa.map().size()}")
+                    println("write $it, mapSize ${perMa.size()}")
                     perMa.persist();
                 }
             }
         }
         runMultithreaded(perMa, threads, runnable)
         def perMaReRead = reRead()
-        def lastSize = perMa.map().size()
-        def perMaReReadSize = perMaReRead.map().size()
+        def lastSize = perMa.size()
+        def perMaReReadSize = perMaReRead.size()
         def diff = diff(perMa, perMaReRead)
 
         then:
@@ -154,9 +154,9 @@ class PerMaIT extends Specification {
                 (1..writesInThread).forEach {
                     def writeNr = it
                     (1..mapSizeInThread).forEach {
-                        perMa.map().put("entry_${writeNr}_$it" as String, randomUUID().toString())
+                        perMa.put("entry_${writeNr}_$it" as String, randomUUID().toString())
                     }
-                    println("write $it, mapSize ${perMa.map().size()}")
+                    println("write $it, mapSize ${perMa.size()}")
                     perMa.persist();
                 }
             }
@@ -172,8 +172,8 @@ class PerMaIT extends Specification {
         }
         runMultithreaded(perMa, writeThreads, writer)
         runMultithreaded(perMa, readThreads, reader)
-        def writableSize = perMa.map().size()
-        def readOnlySize = perMaReadOnly.map().size()
+        def writableSize = perMa.size()
+        def readOnlySize = perMaReadOnly.size()
         def diff = diff(perMa, perMaReadOnly)
 
         then:
@@ -204,13 +204,13 @@ class PerMaIT extends Specification {
                     def writeNr = it
                     (1..250).forEach {
                         if(it*writeNr % 3 == 0) {
-                            perMa.map().remove("entry_$it")
+                            perMa.remove("entry_$it")
                         }
                         else {
-                            perMa.map().put("entry_$it" as String, randomUUID().toString())
+                            perMa.put("entry_$it" as String, randomUUID().toString())
                         }
                     }
-                    println("write $it, mapSize ${perMa.map().size()}")
+                    println("write $it, mapSize ${perMa.size()}")
                     perMa.persist();
                 }
             }
@@ -226,8 +226,8 @@ class PerMaIT extends Specification {
         runMultithreaded(perMa, threads, writer)
         runMultithreaded(perMa, threads, compactor)
         def perMaReRead = reRead()
-        def lastSize = perMa.map().size()
-        def perMaReReadSize = perMaReRead.map().size()
+        def lastSize = perMa.size()
+        def perMaReReadSize = perMaReRead.size()
         def diff = diff(perMa, perMaReRead)
 
         then:
@@ -250,17 +250,17 @@ class PerMaIT extends Specification {
         threadList.forEach { it.start() }
         println("Waiting for threads to join... ")
         threadList.forEach { it.join() }
-        println("all threads finished, mapSize ${perMa.map().size()}")
+        println("all threads finished, mapSize ${perMa.size()}")
     }
 
     def reRead() {
         def perMaReread = ReadOnlyPerMa.load(tempDir, "bigmap", STRING, STRING)
-        println("reread, mapSize ${perMaReread.map().size()}")
+        println("reread, mapSize ${perMaReread.size()}")
         return perMaReread
     }
 
-    def diff(PerMa perMa, PerMa perMaReread) {
-        return Maps.difference(perMa.map(), perMaReread.map())
+    def diff(Map perMa, Map perMaReread) {
+        return Maps.difference(perMa, perMaReread)
     }
 
     def diffIsEmpty(diff) {

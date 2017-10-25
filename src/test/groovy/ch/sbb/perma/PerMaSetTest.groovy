@@ -25,12 +25,12 @@ class PerMaSetTest extends Specification {
         def perMaSet = WritabePerMaSet.loadOrCreate(tempDir, "testset", serializer)
 
         when:
-        perMaSet.set().addAll(set)
+        perMaSet.addAll(set)
         perMaSet.persist();
         def perMaSetReread = WritabePerMaSet.loadOrCreate(tempDir, "testset", serializer)
 
         then:
-        perMaSetReread.set().equals(set)
+        perMaSetReread.equals(set)
 
         where:
         nr | set                                   | serializer
@@ -48,12 +48,12 @@ class PerMaSetTest extends Specification {
         def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, 'testset')
 
         when:
-        perMaSet.set().addAll(set)
+        perMaSet.addAll(set)
         perMaSet.persist();
         def perMaSetReread = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         then:
-        perMaSetReread.set().equals(set)
+        perMaSetReread.equals(set)
     }
 
     def "write read readOnly string set"() {
@@ -62,12 +62,12 @@ class PerMaSetTest extends Specification {
         def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         when:
-        perMaSet.set().addAll(set)
+        perMaSet.addAll(set)
         perMaSet.persist();
         def perMaReread = ReadOnlyPerMaSet.loadStringSet(tempDir, "testset")
 
         then:
-        perMaReread.set().equals(set)
+        perMaReread.equals(set)
     }
 
     def "read readOnly string no files"() {
@@ -75,7 +75,7 @@ class PerMaSetTest extends Specification {
         def perMaSetReread = ReadOnlyPerMaSet.loadStringSet(tempDir, "testset")
 
         then:
-        perMaSetReread.set().equals([] as Set)
+        perMaSetReread.equals([] as Set)
     }
 
     @Unroll
@@ -84,16 +84,16 @@ class PerMaSetTest extends Specification {
         def writablePerMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         when:
-        writablePerMaSet.set().addAll(initial)
+        writablePerMaSet.addAll(initial)
         writablePerMaSet.persist()
         def readOnlyPerMaSet = ReadOnlyPerMaSet.loadStringSet(tempDir, "testset")
-        writablePerMaSet.set().clear()
-        writablePerMaSet.set().addAll(update)
+        writablePerMaSet.clear()
+        writablePerMaSet.addAll(update)
         writablePerMaSet.persist()
         readOnlyPerMaSet.refresh()
 
         then:
-        readOnlyPerMaSet.set().equals(update)
+        readOnlyPerMaSet.equals(update)
 
         where:
         initial                                     | update
@@ -115,14 +115,14 @@ class PerMaSetTest extends Specification {
          ['foo', 'N I X', 'long store'],
          ['N I X', 'long store']].forEach {
             perMaSet.persist()
-            perMaSet.set().clear()
-            perMaSet.set().addAll(it)
+            perMaSet.clear()
+            perMaSet.addAll(it)
         }
         perMaSet.compact()
         def perMaRereadSet = ReadOnlyPerMaSet.loadStringSet(tempDir, "testmap")
 
         then:
-        perMaSet.set().equals(['N I X','long store'] as Set)
-        perMaRereadSet.set().equals(['N I X','long store'] as Set)
+        perMaSet.equals(['N I X','long store'] as Set)
+        perMaRereadSet.equals(['N I X','long store'] as Set)
     }
 }
