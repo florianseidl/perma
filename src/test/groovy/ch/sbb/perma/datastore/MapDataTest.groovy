@@ -20,9 +20,9 @@ class MapDataTest extends Specification {
     
 
     def length(Header header) {
-        def out = new ByteArrayOutputStream();
-        header.writeTo(out);
-        return out.toByteArray().length;
+        def out = new ByteArrayOutputStream()
+        header.writeTo(out)
+        return out.toByteArray().length
     }
 
     def write() {
@@ -30,8 +30,8 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME),
-                    ImmutableMap.copyOf(['A': MapDataTest.VALUE_A]),
+        new MapData(Header.newFullHeader(NAME, 1),
+                    ImmutableMap.copyOf(['A': VALUE_A]),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
 
@@ -46,7 +46,7 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME),
+        new MapData(Header.newFullHeader(NAME, map.size()),
                     ImmutableMap.copyOf(map),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
@@ -59,7 +59,7 @@ class MapDataTest extends Specification {
         extractMap(reread).equals(map)
 
         where:
-        map << [['A':MapDataTest.VALUE_A], ['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B], [:], ['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B, 'C':MapDataTest.VALUE_C]]
+        map << [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B], [:], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]]
     }
 
     @Unroll
@@ -68,13 +68,13 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME),
-                    ImmutableMap.copyOf(['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B]),
+        new MapData(Header.newFullHeader(NAME, 2),
+                    ImmutableMap.copyOf(['A':VALUE_A, 'B':VALUE_B]),
                     ImmutableSet.of())
                 .writeTo(out, STRING, STRING)
         MapData.readFrom(
                 new ByteArrayInputStream(manipulate(out.toByteArray(),
-                                         length(Header.newFullHeader(NAME)) + b)),
+                                         length(Header.newFullHeader(NAME, 2)) + b)),
                 STRING,
                 STRING)
 
@@ -97,7 +97,7 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME),
+        new MapData(Header.newFullHeader(NAME, deleted.size()),
                     ImmutableMap.of(),
                     ImmutableSet.copyOf(deleted as Set))
                 .writeTo(out, STRING, STRING)
@@ -110,13 +110,13 @@ class MapDataTest extends Specification {
         extractMap(reread, existingMap).equals(expected)
 
         where:
-        deleted    | existingMap                                          || expected
-        ['A']      | ['A': MapDataTest.VALUE_A, 'B': MapDataTest.VALUE_B] || ['B': MapDataTest.VALUE_B]
-        ['A','B']  | ['A': MapDataTest.VALUE_A, 'B': MapDataTest.VALUE_B] || [:]
-        []         | ['A': MapDataTest.VALUE_A, 'B': MapDataTest.VALUE_B] || ['A': MapDataTest.VALUE_A, 'B': MapDataTest.VALUE_B]
-        ['B', 'C'] | ['A': MapDataTest.VALUE_A, 'B': MapDataTest.VALUE_B] || ['A': MapDataTest.VALUE_A]
-        ['A']      | [:]                                                  || [:]
-        []         | [:]                                                  || [:]
+        deleted    | existingMap                  || expected
+        ['A']      | ['A': VALUE_A, 'B': VALUE_B] || ['B': VALUE_B]
+        ['A','B']  | ['A': VALUE_A, 'B': VALUE_B] || [:]
+        []         | ['A': VALUE_A, 'B': VALUE_B] || ['A': VALUE_A, 'B': VALUE_B]
+        ['B', 'C'] | ['A': VALUE_A, 'B': VALUE_B] || ['A': VALUE_A]
+        ['A']      | [:]                          || [:]
+        []         | [:]                          || [:]
     }
 
     def "mixed new and deleted #newOrUpdated #deleted"() {
@@ -124,7 +124,7 @@ class MapDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapData(Header.newFullHeader(NAME),
+        new MapData(Header.newFullHeader(NAME, newOrUpdated.size() + deleted.size()),
                     ImmutableMap.copyOf(newOrUpdated),
                     ImmutableSet.copyOf(deleted as Set))
                 .writeTo(out, STRING, STRING)
@@ -138,24 +138,64 @@ class MapDataTest extends Specification {
 
         where:
         newOrUpdated                                       | deleted || expected
-        ['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B] | ['C']   || ['A':MapDataTest.VALUE_A, 'B':MapDataTest.VALUE_B]
+        ['A':VALUE_A, 'B':VALUE_B] | ['C']   || ['A':VALUE_A, 'B':VALUE_B]
     }
 
+    def sizeMismatchOnWrite() {
+        given:
+        def out = new ByteArrayOutputStream();
+
+        when:
+        new MapData(Header.newFullHeader(NAME, 1),
+                    ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
+                    ImmutableSet.of())
+                .writeTo(out, STRING, STRING)
+
+        then:
+        thrown HeaderMismatchException
+    }
+
+    def sizeMismatchOnRead() {
+        given:
+        def out = new ByteArrayOutputStream();
+
+        when:
+        new MapData(Header.newFullHeader(NAME, 2),
+                ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
+                ImmutableSet.of())
+                .writeTo(out, STRING, STRING)
+        def otherOut = new ByteArrayOutputStream()
+        Header.newFullHeader(NAME, 1).writeTo(otherOut)
+        def merged = out.toByteArray()
+        mergeByteArrays(otherOut.toByteArray(), merged)
+        MapData.readFrom(
+                new ByteArrayInputStream(merged),
+                STRING,
+                STRING)
+
+        then:
+        thrown HeaderMismatchException
+    }
+
+    def mergeByteArrays(byte[] source, byte[] target) {
+        System.arraycopy(source, 0, target, 0, source.size())
+    }
+
+
     def extractMap(mapData, map=[:]) {
-        mapData.addTo(map);
+        mapData.addTo(map)
         return map
     }
 
     def toStringIsImplemented() {
         when:
         def mapDataToString = new MapData(
-                Header.newFullHeader(NAME),
-                ImmutableMap.of('A', MapDataTest.VALUE_A),
+                Header.newFullHeader(NAME, 2),
+                ImmutableMap.of('A', VALUE_A),
                 ImmutableSet.of('C'))
                 .toString();
 
         then:
         !mapDataToString.contains('@')
     }
-
 }

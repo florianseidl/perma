@@ -2,7 +2,7 @@
   <configuration default="false" name="PerMaIT" type="JUnit" factoryName="JUnit" singleton="true" nameIsGenerated="true">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
       <pattern>
-        <option name="PATTERN" value="ch.sbb.perma.datastore.*" />
+        <option name="PATTERN" value="ch.sbb.perma.datastore.NullValueSerializer" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

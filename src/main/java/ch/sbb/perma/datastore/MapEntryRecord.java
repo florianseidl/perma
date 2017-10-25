@@ -102,11 +102,11 @@ class MapEntryRecord<K,V> {
         this.recordType = recordType;
     }
 
-    static <K,V> MapEntryRecord newOrUpdated(K key, V value) {
-        return new MapEntryRecord(key, value, NEW_UPDATED);
+    static <K,V> MapEntryRecord<K,V> newOrUpdated(K key, V value) {
+        return new MapEntryRecord<>(key, value, NEW_UPDATED);
     }
 
-    static <K> MapEntryRecord deleted(K key) {
+    static <K,V> MapEntryRecord<K,V> deleted(K key) {
         return new MapEntryRecord<>(key, null, DELETED);
     }
 
@@ -137,12 +137,12 @@ class MapEntryRecord<K,V> {
         BinaryWriter writerWithChecksum = new BinaryWriter(out, new CRC32());
         writerWithChecksum.writeByte(recordType.byteValue);
         writerWithChecksum.writeWithLength(keySerializer.toByteArray(key));
-        writerWithChecksum.writeWithLength(value != null ? valueSerializer.toByteArray(value) : null);
+        writerWithChecksum.writeWithLength(valueSerializer.toByteArray(value));
         writerWithChecksum.writeChecksum();
     }
 
     void addTo(ImmutableMap.Builder<K, V> addedUpdatedEntries,
-                      ImmutableSet.Builder<K> deletedEntries) {
+               ImmutableSet.Builder<K> deletedEntries) {
         recordType.addRecordTo(
                 this,
                 addedUpdatedEntries,

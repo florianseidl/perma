@@ -6,6 +6,7 @@ package ch.sbb.perma.datastore;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import com.google.common.primitives.Shorts;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +46,10 @@ class BinaryReader {
         int value = in.read();
         checksum.update(value);
         return value;
+    }
+
+    short readShort() throws IOException {
+        return Shorts.fromByteArray(read(2));
     }
 
     int readInt() throws IOException {

@@ -6,6 +6,7 @@ package ch.sbb.perma.datastore;
 
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
+import com.google.common.primitives.Shorts;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,6 +46,10 @@ class BinaryWriter {
     void writeByte(int value) throws IOException {
         checksum.update(value);
         out.write(value);
+    }
+
+    void writeShort(short value) throws IOException {
+        write(Shorts.toByteArray(value));
     }
 
     void writeInt(int value) throws IOException {
