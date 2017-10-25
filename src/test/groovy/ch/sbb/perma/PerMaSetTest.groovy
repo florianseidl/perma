@@ -90,7 +90,7 @@ class PerMaSetTest extends Specification {
         writablePerMaSet.set().clear()
         writablePerMaSet.set().addAll(update)
         writablePerMaSet.persist()
-        readOnlyPerMaSet.udpate()
+        readOnlyPerMaSet.refresh()
 
         then:
         readOnlyPerMaSet.set().equals(update)

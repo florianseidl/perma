@@ -47,12 +47,12 @@ public class ReadOnlyPerMaSet<T> implements PerMaSet<T> {
         return new ReadOnlyPerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
     }
 
-    public void udpate() throws IOException {
+    public void refresh() throws IOException {
         try {
             loadLock.lock();
-            LOG.debug("Updating map");
+            LOG.debug("Refreshing set");
             lastLoaded = lastLoaded.refresh();
-            LOG.debug("Loaded set snapshot with {} entries", lastLoaded.asImmutableMap().size());
+            LOG.info("Refreshed set snapshot with {} entries", lastLoaded.asImmutableMap().size());
         }
         finally {
             loadLock.unlock();

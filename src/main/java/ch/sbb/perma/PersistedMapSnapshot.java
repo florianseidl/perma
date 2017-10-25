@@ -58,7 +58,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                                        FileGroup latestFiles,
                                        KeyOrValueSerializer<K> keySerializer,
                                        KeyOrValueSerializer<V> valueSerializer) throws IOException{
-        LOG.debug("Loading persisted Snapshot from files latestFiles");
+        LOG.debug("Loading persisted Snapshot from files latestFiles {}", latestFiles);
         Map<K,V> collector = new HashMap<>();
         MapFileData latestData = MapFileData.readFileGroupAndCollect(
                 latestFiles.fullFile(),
@@ -88,6 +88,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
             return this;
         }
         if(moreThanAThirdUpdatedOrDeleted(diff)) {
+            LOG.debug("More than a third of the records are added and/or deleted, compacting to full file");
             return compactTo(currentImmutable);
         }
         MapFileData<K,V> nextDeltaData = toDelta(diff).writeTo(
@@ -115,6 +116,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
     public MapSnapshot<K, V> refresh() throws IOException {
         FileGroup refreshedFiles = files.refresh();
         if(!refreshedFiles.hasSameFullFileAs(files)) { // there was a compact, reload
+            LOG.debug("Reloading instead of refresh, full file has changed");
             return load(name, refreshedFiles, keySerializer, valueSerializer);
         }
         List<File> additionalDeltaFiles = refreshedFiles.deltaFilesSince(files);
@@ -144,8 +146,10 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
     }
 
     private MapSnapshot<K, V> compactTo(ImmutableMap<K,V> nextMapSnapshot) throws IOException {
+        LOG.debug("Compacting map snapshot files {}", files);
         MapSnapshot<K,V> compactedSnapshot = new NewMapSnapshot<>(name, files, keySerializer, valueSerializer)
                 .writeNext(nextMapSnapshot);
+        LOG.debug("Deleting files {}", files);
         files.delete();
         return compactedSnapshot;
     }
