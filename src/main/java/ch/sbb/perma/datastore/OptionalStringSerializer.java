@@ -17,7 +17,7 @@ import java.util.Optional;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class OptionalStringSerializer implements KeyOrValueSerializer<Optional<String>> {
+public class OptionalStringSerializer implements KeyOrValueSerializer<Optional<String>> {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     OptionalStringSerializer() {

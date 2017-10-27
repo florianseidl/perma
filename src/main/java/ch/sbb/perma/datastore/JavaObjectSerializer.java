@@ -19,7 +19,7 @@ import java.io.Serializable;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class JavaObjectSerializer<T extends Serializable> implements KeyOrValueSerializer<T> {
+public class JavaObjectSerializer<T extends Serializable> implements KeyOrValueSerializer<T> {
     @Override
     public byte[] toByteArray(T object) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();

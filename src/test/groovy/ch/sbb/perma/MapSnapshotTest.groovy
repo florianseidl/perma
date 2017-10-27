@@ -21,6 +21,10 @@ class MapSnapshotTest extends Specification {
         tempDir = File.createTempDir()
     }
 
+    def cleanup() {
+        tempDir.deleteDir()
+    }
+
     def "new snapshot"() {
         when:
         def snapshot = new NewMapSnapshot(

@@ -54,7 +54,7 @@ class PerMaIT extends Specification {
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     def "write #writes times map of #mapSize random entries in #threads thread"() {
         given:
-        def perMa = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
 
         when:
         final int writesInThread = writes / threads
@@ -97,7 +97,7 @@ class PerMaIT extends Specification {
     @Timeout(value = 2, unit = TimeUnit.MINUTES)
     def "write remove #writes times map of #mapSize entries in #threads thread"() {
         given:
-        def perMa = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
 
         when:
         final int writesInThread = writes / threads
@@ -142,7 +142,7 @@ class PerMaIT extends Specification {
     @Timeout(value = 2, unit = TimeUnit.MINUTES)
     def "write #writes times and read #reads times map of #mapSize entries in #writeThreads write threads #readThreads read threads"() {
         given:
-        def perMa = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
         def perMaReadOnly = ReadOnlyPerMa.load(tempDir, "bigmap", STRING, STRING)
 
         when:
@@ -194,7 +194,7 @@ class PerMaIT extends Specification {
     @Timeout(value = 2, unit = TimeUnit.MINUTES)
     def "write comapct #threads write threads #compactThreads compact threads"() {
         given:
-        def perMa = WritabePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "bigmap", STRING, STRING)
 
         when:
         def writer = new Runnable() {
