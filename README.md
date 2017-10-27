@@ -37,7 +37,7 @@ perma.update()
 ```
 
 Persist is the operation persisting the data to the disk (similar ot a database commit). 
-Data for a writeable disk is only loaded initially.
+Data for a writable disk is only loaded initially.
 
 If Persist is performed, a snapshot of the current state of the map (or set) is taken and persisted.
 
