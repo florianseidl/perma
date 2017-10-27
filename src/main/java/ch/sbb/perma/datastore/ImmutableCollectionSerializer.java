@@ -6,17 +6,13 @@ package ch.sbb.perma.datastore;
 
 import com.google.common.collect.ImmutableCollection;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
 /**
  * Serialize a immutable collection as value. Each item is serialized using the given item serializer.
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>,T> implements KeyOrValueSerializer<C>{
+abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>, T> implements KeyOrValueSerializer<C> {
     private KeyOrValueSerializer<T> itemSerializier;
 
     public ImmutableCollectionSerializer(KeyOrValueSerializer<T> itemSerializier) {
@@ -25,34 +21,23 @@ abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>,T>
 
     @Override
     public byte[] toByteArray(C collection) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            BinaryWriter writer = new BinaryWriter(bos);
-            writer.writeInt(collection.size());
-            for(T item : collection) {
-                writer.writeWithLength(itemSerializier.toByteArray(item));
-            }
-            bos.flush();
-            return bos.toByteArray();
+        CollectionBinaryWriter writer = new CollectionBinaryWriter();
+        writer.writeLength(collection.size());
+        for (T item : collection) {
+            writer.writeNext(itemSerializier.toByteArray(item));
         }
-        catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+        return writer.toByteArray();
     }
 
     @SuppressWarnings("unchecked")
     public C fromByteArray(byte[] bytes) {
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes)) {
-            BinaryReader reader = new BinaryReader(bis);
-            int collectionSize = reader.readInt();
-            ImmutableCollection.Builder<T> builder = collectionBuilder();
-            for(int i = 0; i < collectionSize; i++) {
-                builder.add(itemSerializier.fromByteArray(reader.readWithLength()));
-            }
-            return (C) builder.build();
+        CollectionBinaryReader reader = new CollectionBinaryReader(bytes);
+        int collectionSize = reader.readLength();
+        ImmutableCollection.Builder<T> builder = collectionBuilder();
+        for (int i = 0; i < collectionSize; i++) {
+            builder.add(itemSerializier.fromByteArray(reader.readNext()));
         }
-        catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
+        return (C) builder.build();
     }
 
     abstract ImmutableCollection.Builder<T> collectionBuilder();

@@ -14,6 +14,10 @@ class DirectoryTest extends Specification {
         tempDir = File.createTempDir()
     }
 
+    def cleanup() {
+        tempDir.deleteDir()
+    }
+
     @Unroll
     def "latest file #files"() {
         given:

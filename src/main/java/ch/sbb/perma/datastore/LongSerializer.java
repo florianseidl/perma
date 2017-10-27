@@ -13,7 +13,6 @@ import com.google.common.primitives.Longs;
  * @since 1.0, 2017.
  */
 public class LongSerializer implements KeyOrValueSerializer<Long> {
-
     @Override
     public byte[] toByteArray(Long longValue) {
         return Longs.toByteArray(longValue);

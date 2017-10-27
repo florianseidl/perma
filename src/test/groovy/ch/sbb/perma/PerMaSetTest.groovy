@@ -19,15 +19,19 @@ class PerMaSetTest extends Specification {
         tempDir = File.createTempDir()
     }
 
+    def cleanup() {
+        tempDir.deleteDir()
+    }
+
     @Unroll
     def "write read #nr"() {
         given:
-        def perMaSet = WritabePerMaSet.loadOrCreate(tempDir, "testset", serializer)
+        def perMaSet = WritablePerMaSet.loadOrCreate(tempDir, "testset", serializer)
 
         when:
         perMaSet.addAll(set)
         perMaSet.persist();
-        def perMaSetReread = WritabePerMaSet.loadOrCreate(tempDir, "testset", serializer)
+        def perMaSetReread = WritablePerMaSet.loadOrCreate(tempDir, "testset", serializer)
 
         then:
         perMaSetReread.equals(set)
@@ -45,12 +49,12 @@ class PerMaSetTest extends Specification {
     def "write read string set"() {
         given:
         def set = ['foo', 'bar'] as Set
-        def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, 'testset')
+        def perMaSet = WritablePerMaSet.loadOrCreateStringSet(tempDir, 'testset')
 
         when:
         perMaSet.addAll(set)
         perMaSet.persist();
-        def perMaSetReread = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
+        def perMaSetReread = WritablePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         then:
         perMaSetReread.equals(set)
@@ -59,7 +63,7 @@ class PerMaSetTest extends Specification {
     def "write read readOnly string set"() {
         given:
         def set = ['foo', 'N I X', 'bla bla bla'] as Set
-        def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
+        def perMaSet = WritablePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         when:
         perMaSet.addAll(set)
@@ -81,7 +85,7 @@ class PerMaSetTest extends Specification {
     @Unroll
     def "write read write update readOnly string set #initial #update"() {
         given:
-        def writablePerMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testset")
+        def writablePerMaSet = WritablePerMaSet.loadOrCreateStringSet(tempDir, "testset")
 
         when:
         writablePerMaSet.addAll(initial)
@@ -107,7 +111,7 @@ class PerMaSetTest extends Specification {
 
     def "write compact reread string set"() {
         given:
-        def perMaSet = WritabePerMaSet.loadOrCreateStringSet(tempDir, "testmap")
+        def perMaSet = WritablePerMaSet.loadOrCreateStringSet(tempDir, "testmap")
 
         when:
         [['foo'],

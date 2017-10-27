@@ -29,15 +29,15 @@ import static ch.sbb.perma.datastore.NullValueSerializer.NULL_OBJECT;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritabePerMaSet<T> extends ForwardingSet<T> implements Writeable {
-    private final static Logger LOG = LoggerFactory.getLogger(WritabePerMaSet.class);
+public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writeable {
+    private final static Logger LOG = LoggerFactory.getLogger(WritablePerMaSet.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();
     private final Set<T> set;
 
     private MapSnapshot<T, Object> lastPersisted;
 
-    private WritabePerMaSet(MapSnapshot<T, Object> lastPersisted) {
+    private WritablePerMaSet(MapSnapshot<T, Object> lastPersisted) {
         this.lastPersisted = lastPersisted;
         this.set = toMutableSet(lastPersisted.asImmutableMap().keySet());
     }
@@ -48,17 +48,17 @@ public class WritabePerMaSet<T> extends ForwardingSet<T> implements Writeable {
         return set;
     }
 
-    public static WritabePerMaSet loadOrCreateStringSet(File dir, String name) throws IOException {
-        return loadOrCreate(dir,
-                            name,
-                            KeyOrValueSerializer.STRING);
+    public static WritablePerMaSet<String> loadOrCreateStringSet(File dir, String name) throws IOException {
+        return WritablePerMaSet.loadOrCreate(dir,
+                                            name,
+                                            KeyOrValueSerializer.STRING);
     }
 
-    public static <T> WritabePerMaSet loadOrCreate(File dir,
-                                                     String name,
-                                                     KeyOrValueSerializer<T> serializer) throws IOException {
+    public static <T> WritablePerMaSet<T> loadOrCreate(File dir,
+                                                    String name,
+                                                    KeyOrValueSerializer<T> serializer) throws IOException {
         LOG.info("Loading writabe PerMaSet {} from directory {}", name, dir);
-        return new WritabePerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
+        return new WritablePerMaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
     }
 
     public void persist() throws IOException {
@@ -66,7 +66,7 @@ public class WritabePerMaSet<T> extends ForwardingSet<T> implements Writeable {
             persistLock.lock();
             LOG.debug("Persisting set");
             this.lastPersisted = lastPersisted.writeNext(setAsMap(set));
-            LOG.info("Persisted set to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+            LOG.info("Persisted set with {} entries to snapshot", lastPersisted.asImmutableMap().size());
         }
         finally {
             persistLock.unlock();
@@ -79,7 +79,7 @@ public class WritabePerMaSet<T> extends ForwardingSet<T> implements Writeable {
             persist();
             LOG.debug("Compacting set");
             this.lastPersisted = lastPersisted.compact();
-            LOG.info("Compacted set to snapshot with {} entries", lastPersisted.asImmutableMap().size());
+            LOG.info("Compacted set with {} entries", lastPersisted.asImmutableMap().size());
         }
         finally {
             persistLock.unlock();
