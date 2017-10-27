@@ -8,7 +8,7 @@
 
 	<groupId>ch.sbb.perma</groupId>
 	<artifactId>perma</artifactId>
-	<version>2.1-SNAPSHOT</version>
+	<version>3.0-SNAPSHOT</version>
 
 	<description>A very simple embedded map database with a focus on stability in a cloud environment</description>
 
