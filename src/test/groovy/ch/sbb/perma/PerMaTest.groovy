@@ -6,8 +6,12 @@ package ch.sbb.perma
 
 import ch.sbb.perma.datastore.ImmutableListSerializer
 import ch.sbb.perma.datastore.ImmutableSetSerializer
+import ch.sbb.perma.datastore.PairSerializer
+import ch.sbb.perma.datastore.TripletSerializer
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
+import org.javatuples.Pair
+import org.javatuples.Triplet
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -26,15 +30,19 @@ class PerMaTest extends Specification {
         tempDir = File.createTempDir()
     }
 
+    def cleanup() {
+        tempDir.deleteDir()
+    }
+
     @Unroll
     def "write read #map.keySet()"() {
         given:
-        def perMa = WritabePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         when:
         perMa.putAll(map)
         perMa.persist()
-        def perMaReread = WritabePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        def perMaReread = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         then:
         perMaReread.equals(map)
@@ -54,12 +62,12 @@ class PerMaTest extends Specification {
     @Unroll
     def "write read collection value #nr"() {
         given:
-        def perMa = WritabePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         when:
         perMa.putAll(map)
         perMa.persist()
-        def perMaReread = WritabePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
+        def perMaReread = WritablePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         then:
         perMaReread['key'].equals(expected)
@@ -73,15 +81,37 @@ class PerMaTest extends Specification {
         5  | ['key':ImmutableSet.of()]                                  | new ImmutableSetSerializer<>(STRING)  || [] as Set
     }
 
+    @Unroll
+    def "write read tuple value #map.keySet()"() {
+        given:
+        def perMa = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+
+        when:
+        perMa.putAll(map)
+        perMa.persist()
+        def perMaReread = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+
+        then:
+        perMaReread.equals(map)
+
+        where:
+        map                          | keySerializer                                                         | valueSerializer
+        ['key':new Pair(1, 'A')]     | STRING                                                                | new PairSerializer<Integer, String>(INTEGER, STRING)
+        [(new Pair('X',42L)):7]      | new PairSerializer<Integer, String>(STRING, LONG)                     | INTEGER
+        [(new Pair('X',null)):7]     | new PairSerializer<Integer, String>(STRING, LONG)                     | INTEGER
+        [(new Pair(null,null)):7]    | new PairSerializer<Integer, String>(STRING, LONG)                     | INTEGER
+        [(new Triplet('A',1,2)):32]  | new TripletSerializer<String,Integer,Integer>(STRING,INTEGER,INTEGER) | INTEGER
+    }
+
     def "write read string map"() {
         given:
         def map = ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING]
-        def perMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
         perMa.putAll(map)
         perMa.persist();
-        def perMaReread = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perMaReread = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         then:
         perMaReread.equals(map)
@@ -90,7 +120,7 @@ class PerMaTest extends Specification {
     def "write read readOnly string map"() {
         given:
         def map = ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING]
-        def perMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
         perMa.putAll(map)
@@ -112,7 +142,7 @@ class PerMaTest extends Specification {
     @Unroll
     def "write read write refresh readOnly string map #initial.keySet() #update.keySet()"() {
         given:
-        def writablePerMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def writablePerMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
         writablePerMa.putAll(initial)
@@ -138,7 +168,7 @@ class PerMaTest extends Specification {
 
     def "write read write refresh with compact readOnly string map"() {
         given:
-        def writablePerMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def writablePerMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
         writablePerMa.putAll(['foo':FOO])
@@ -160,7 +190,7 @@ class PerMaTest extends Specification {
 
     def "write compact reread string map"() {
         given:
-        def perMa = WritabePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
         [['foo':FOO],

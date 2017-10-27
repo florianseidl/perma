@@ -96,9 +96,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                                                 filesWithNextDeltaFile.latestDeltaFile(),
                                                 keySerializer,
                                                 valueSerializer);
-        LOG.debug("Writing delta file with size={} to file {}",
-                currentImmutable.size(),
-                filesWithNextDeltaFile.latestDeltaFile());
+        LOG.debug("Writing delta to file {}", filesWithNextDeltaFile.latestDeltaFile());
         return new PersistedMapSnapshot<K,V>(
                                 name,
                                 filesWithNextDeltaFile,
@@ -168,6 +166,8 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                         .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().rightValue()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         modifiedEntries.putAll(newEntries);
+        LOG.debug("Delta with newAndModifiedEnties.size={} and deleted.size={}",
+                        modifiedEntries.size(), deleted.size());
         return persited.nextDelta(ImmutableMap.copyOf(modifiedEntries), ImmutableSet.copyOf(deleted));
     }
 

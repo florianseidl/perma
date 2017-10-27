@@ -13,28 +13,28 @@ import java.io.InputStream;
 import java.util.zip.Checksum;
 
 /**
- * Helper methods to write and read bytes from and to a stream.
+ * Read int, long, short and byte arrays with length from binary data.
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class BinaryReader {
+public class BinaryReader {
     private final static int NULL_LENGTH = -1;
 
     private final InputStream in;
     private final Checksum checksum;
 
-    public BinaryReader(InputStream in, Checksum crc32) {
+    BinaryReader(InputStream in, Checksum crc32) {
         this.in = in;
         this.checksum = crc32;
     }
 
-    public BinaryReader(InputStream in) {
+    BinaryReader(InputStream in) {
         this.in = in;
         this.checksum = NoChecksum.INSTANCE;
     }
 
-    byte[] readWithLength() throws IOException {
+    public byte[] readWithLength() throws IOException {
         int length = readInt();
         if(length == NULL_LENGTH) {
             return null;
@@ -42,25 +42,25 @@ class BinaryReader {
         return read(length);
     }
 
-    int readByte() throws IOException {
+    public int readByte() throws IOException {
         int value = in.read();
         checksum.update(value);
         return value;
     }
 
-    short readShort() throws IOException {
+    public short readShort() throws IOException {
         return Shorts.fromByteArray(read(2));
     }
 
-    int readInt() throws IOException {
+    public int readInt() throws IOException {
         return Ints.fromByteArray(read(4));
     }
 
-    long readLong() throws IOException {
+    public long readLong() throws IOException {
         return Longs.fromByteArray(read(8));
     }
 
-    byte[] read(int length) throws IOException {
+    public byte[] read(int length) throws IOException {
         byte[] bytes = new byte[length];
         in.read(bytes);
         checksum.update(bytes, 0, length);

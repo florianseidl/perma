@@ -44,7 +44,7 @@ public class ReadOnlyPerMa<K,V> extends ForwardingMap<K,V> implements Refreshabl
                                               String name,
                                               KeyOrValueSerializer<K> keySerializer,
                                               KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        LOG.info("Loading readonly Writeable {} from directory {}", name, dir);
+        LOG.info("Loading readonly PerMa {} from directory {}", name, dir);
         return new ReadOnlyPerMa<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 

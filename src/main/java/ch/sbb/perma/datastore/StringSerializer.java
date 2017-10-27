@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class StringSerializer implements KeyOrValueSerializer<String> {
+public class StringSerializer implements KeyOrValueSerializer<String> {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     StringSerializer() {
