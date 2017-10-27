@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Read only persistent map.
  * <p>
- *     Is the public Writeable API for immutable maps. Loads a persisted map and updates it on request.
+ *     Is the public Writable API for immutable maps. Loads a persisted map and updates it on request.
  * </p>
  *
  * @author u206123 (Florian Seidl)

@@ -16,7 +16,7 @@ import java.io.IOException;
  * @author u206123 (Florian Seidl)
  * @since 1.2, 2017.
  */
-public interface Writeable<K,V> {
+public interface Writable<K,V> {
     void persist() throws IOException;
     void compact() throws IOException;
 }
