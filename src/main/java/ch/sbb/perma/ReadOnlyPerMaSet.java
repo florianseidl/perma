@@ -19,7 +19,7 @@ import static ch.sbb.perma.datastore.NullValueSerializer.NULL;
 /**
  * Read only persistent set.
  * <p>
- *     Is the public Writeable API for immutable set. Loads a persisted set and updates it on request.
+ *     Is the public Writable API for immutable set. Loads a persisted set and updates it on request.
  * </p>
  *
  * @author u206123 (Florian Seidl)

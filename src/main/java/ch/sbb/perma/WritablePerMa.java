@@ -18,13 +18,13 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * A mutable persistent map.
  * <p>
- *     Is the public Writeable API for mutable maps. Loads and stores a persisted map.
+ *     Is the public Writable API for mutable maps. Loads and stores a persisted map.
  * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritablePerMa<K,V> extends ForwardingConcurrentMap<K,V> implements Writeable {
+public class WritablePerMa<K,V> extends ForwardingConcurrentMap<K,V> implements Writable {
     private final static Logger LOG = LoggerFactory.getLogger(WritablePerMa.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();

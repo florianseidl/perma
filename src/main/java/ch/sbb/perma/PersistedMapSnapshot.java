@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * A snapshot of a map that is persisted to Writeable files.
+ * A snapshot of a map that is persisted to Writable files.
  * <p>
  *      Load and store a complete snapshot of the map.
  * </p>

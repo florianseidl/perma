@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Writeable files in a directory. Can List, create new files,...
+ * Writable files in a directory. Can List, create new files,...
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.

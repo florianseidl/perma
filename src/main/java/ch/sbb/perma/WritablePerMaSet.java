@@ -23,13 +23,13 @@ import static ch.sbb.perma.datastore.NullValueSerializer.NULL_OBJECT;
 /**
  * A mutable persistent set.
  * <p>
- *   Is the public Writeable API for mutable sets. Load and store a persisted sets.
+ *   Is the public Writable API for mutable sets. Load and store a persisted sets.
  * </p>
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writeable {
+public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writable {
     private final static Logger LOG = LoggerFactory.getLogger(WritablePerMaSet.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();
