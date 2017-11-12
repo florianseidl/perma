@@ -21,21 +21,21 @@ abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>, T
 
     @Override
     public byte[] toByteArray(C collection) {
-        CollectionBinaryWriter writer = new CollectionBinaryWriter();
-        writer.writeLength(collection.size());
+        CompoundBinaryWriter writer = new CompoundBinaryWriter();
+        writer.writeInt(collection.size());
         for (T item : collection) {
-            writer.writeNext(itemSerializier.toByteArray(item));
+            writer.writeWithLength(itemSerializier.toByteArray(item));
         }
         return writer.toByteArray();
     }
 
     @SuppressWarnings("unchecked")
     public C fromByteArray(byte[] bytes) {
-        CollectionBinaryReader reader = new CollectionBinaryReader(bytes);
-        int collectionSize = reader.readLength();
+        CompoundBinaryReader reader = new CompoundBinaryReader(bytes);
+        int collectionSize = reader.readInt();
         ImmutableCollection.Builder<T> builder = collectionBuilder();
         for (int i = 0; i < collectionSize; i++) {
-            builder.add(itemSerializier.fromByteArray(reader.readNext()));
+            builder.add(itemSerializier.fromByteArray(reader.readWithLength()));
         }
         return (C) builder.build();
     }

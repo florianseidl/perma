@@ -39,7 +39,6 @@ class MapFileDataTest extends Specification {
         out.toByteArray().length > 0
     }
 
-
     @Unroll
     def "write read #map.keySet()"() {
         given:

@@ -21,20 +21,30 @@ public abstract class TupleSerializer<T extends Tuple> implements KeyOrValueSeri
 
     @Override
     public byte[] toByteArray(T tuple) {
-        CollectionBinaryWriter writer = new CollectionBinaryWriter();
+        CompoundBinaryWriter writer = new CompoundBinaryWriter();
         for(int i = 0; i < tuple.getSize(); i++) {
-            writer.writeNext(tuple.getValue(i) != null ?
-                    serializers[i].toByteArray(tuple.getValue(i)) : null);
+            writer.writeWithLength(tuple.getValue(i) != null ?
+                    toByteArray(serializers[i], tuple.getValue(i)) : null);
         }
         return writer.toByteArray();
     }
 
+    private static byte[] toByteArray(KeyOrValueSerializer serializer, Object value) {
+        byte[] bytes = serializer.toByteArray(value);
+        if(bytes == null) {
+            throw new IllegalArgumentException(String.format(
+                    "To Null Serializer is not allowed as value serializer in Tuple serializer: %s",
+                    serializer.getClass().getSimpleName()));
+        }
+        return bytes;
+    }
+
     @Override
     public T fromByteArray(byte[] bytes) {
-        CollectionBinaryReader reader = new CollectionBinaryReader(bytes);
+        CompoundBinaryReader reader = new CompoundBinaryReader(bytes);
         Object[] values = new Object[serializers.length];
         for(int i = 0; i < serializers.length; i++) {
-            byte[] valueAsBytes = reader.readNext();
+            byte[] valueAsBytes = reader.readWithLength();
             values[i] = valueAsBytes != null ?
                     serializers[i].fromByteArray(valueAsBytes) : null;
         }
