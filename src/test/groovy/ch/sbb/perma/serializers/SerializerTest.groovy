@@ -2,7 +2,7 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore
+package ch.sbb.perma.serializers
 
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet

@@ -4,10 +4,10 @@
 
 package ch.sbb.perma
 
-import ch.sbb.perma.datastore.ImmutableListSerializer
-import ch.sbb.perma.datastore.ImmutableSetSerializer
-import ch.sbb.perma.datastore.PairSerializer
-import ch.sbb.perma.datastore.TripletSerializer
+import ch.sbb.perma.serializers.ImmutableListSerializer
+import ch.sbb.perma.serializers.ImmutableSetSerializer
+import ch.sbb.perma.serializers.PairSerializer
+import ch.sbb.perma.serializers.TripletSerializer
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.javatuples.Pair
@@ -17,7 +17,7 @@ import spock.lang.Unroll
 
 import java.time.LocalDate
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.*
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
 
 class PerMaTest extends Specification {
     private static String FOO = 'foobar'

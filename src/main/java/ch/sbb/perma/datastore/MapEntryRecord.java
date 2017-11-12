@@ -4,6 +4,7 @@
 
 package ch.sbb.perma.datastore;
 
+import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 

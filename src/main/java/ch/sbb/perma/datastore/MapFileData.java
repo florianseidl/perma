@@ -5,6 +5,8 @@
 package ch.sbb.perma.datastore;
 
 import ch.sbb.perma.FileRenameException;
+import ch.sbb.perma.serializers.KeyOrValueSerializer;
+import ch.sbb.perma.serializers.NullValueSerializer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 

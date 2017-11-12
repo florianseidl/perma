@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableSet
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.STRING
 
 class MapFileDataTest extends Specification {
     private static final UUID uuid = UUID.fromString("d4b89e8b-49d8-4c36-a798-942fb025a402");

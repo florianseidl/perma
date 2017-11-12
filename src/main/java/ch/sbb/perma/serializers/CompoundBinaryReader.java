@@ -2,12 +2,12 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
+
+import ch.sbb.perma.datastore.BinaryReader;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING;
 
 /**
  * Read multiple items from bytes.
@@ -39,15 +39,6 @@ public class CompoundBinaryReader {
         }
     }
 
-    public short readShort() {
-        try {
-            return reader.readShort();
-        }
-        catch (IOException ex) {
-            throw new IllegalStateException(ex);
-        }
-    }
-
     public int readByte() {
         try {
             return reader.readByte();
@@ -57,6 +48,16 @@ public class CompoundBinaryReader {
         }
     }
 
+    public short readShort() {
+        try {
+            return reader.readShort();
+        }
+        catch (IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
+
     public long readLong() {
         try {
             return reader.readLong();
@@ -64,9 +65,5 @@ public class CompoundBinaryReader {
         catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-    }
-
-    public String readString() {
-        return STRING.fromByteArray(readWithLength());
     }
 }

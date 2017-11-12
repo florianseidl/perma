@@ -24,12 +24,12 @@ public class BinaryReader {
     private final InputStream in;
     private final Checksum checksum;
 
-    BinaryReader(InputStream in, Checksum crc32) {
+    public BinaryReader(InputStream in, Checksum crc32) {
         this.in = in;
         this.checksum = crc32;
     }
 
-    BinaryReader(InputStream in) {
+    public BinaryReader(InputStream in) {
         this.in = in;
         this.checksum = NoChecksum.INSTANCE;
     }

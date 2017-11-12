@@ -2,14 +2,11 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import java.time.LocalTime;
 
 public class LocalTimeSerializer implements KeyOrValueSerializer<LocalTime> {
-
-    LocalTimeSerializer() {
-    }
 
     @Override
     public byte[] toByteArray(LocalTime localTime) {

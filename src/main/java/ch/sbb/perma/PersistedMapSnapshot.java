@@ -4,8 +4,8 @@
 
 package ch.sbb.perma;
 
-import ch.sbb.perma.datastore.KeyOrValueSerializer;
 import ch.sbb.perma.datastore.MapFileData;
+import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;

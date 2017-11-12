@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.zip.CRC32;
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING;
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.STRING;
 
 /**
  * The binary format of the header of a Writable File.

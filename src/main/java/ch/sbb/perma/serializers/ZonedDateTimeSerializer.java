@@ -2,7 +2,7 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import com.google.common.primitives.Bytes;
 
@@ -14,7 +14,7 @@ import java.util.Arrays;
 public class ZonedDateTimeSerializer implements KeyOrValueSerializer<ZonedDateTime> {
     private final int lengthOfLocalDateTimeAsBytes;
 
-    ZonedDateTimeSerializer() {
+    public ZonedDateTimeSerializer() {
         lengthOfLocalDateTimeAsBytes = LOCAL_DATE_TIME.toByteArray(LocalDateTime.MAX).length;
     }
 

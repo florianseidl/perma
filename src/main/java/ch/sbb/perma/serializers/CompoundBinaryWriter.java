@@ -2,12 +2,12 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
+
+import ch.sbb.perma.datastore.BinaryWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING;
 
 /**
  * Write multiple items to bytes.
@@ -58,10 +58,6 @@ public class CompoundBinaryWriter {
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
         }
-    }
-
-    public void writeString(String value) {
-        writeWithLength(STRING.toByteArray(value));
     }
 
     public byte[] toByteArray() {
