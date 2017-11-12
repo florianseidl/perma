@@ -7,7 +7,7 @@ package ch.sbb.perma.serializers;
 import java.nio.charset.Charset;
 
 /**
- * Serialize Non-Null-Strings.
+ * Serialize non-null-Strings.
  * <p>
  *     The serialized form of Strings is UTF-8.
  * </p>

@@ -29,7 +29,9 @@ class SerializerTest extends Specification {
 
         where:
         serializer                                                  | value
-        new StringSerializer()                                      | "foo bar"
+        new StringSerializer()                                      | 'foo bar'
+        new StringSerializer()                                      | ''
+        new StringSerializer()                                      | ' '
         new IntegerSerializer()                                     | Integer.MAX_VALUE
         new IntegerSerializer()                                     | 0
         new IntegerSerializer()                                     | Integer.MIN_VALUE
@@ -53,6 +55,8 @@ class SerializerTest extends Specification {
         new CharSerializer()                                        | 'a' as Character
         new CharSerializer()                                        | ' ' as Character
         new CharSerializer()                                        | 'Ü' as Character
+        new ShortStringSerializer()                                 | 'bli bla blo'
+        new ShortStringSerializer()                                 | ''
         new OptionalStringSerializer()                              | of("foo")
         new OptionalStringSerializer()                              | empty()
         new ImmutableListSerializer(new StringSerializer())         | ImmutableList.builder().addAll(['a', 'b', 'c']).build()

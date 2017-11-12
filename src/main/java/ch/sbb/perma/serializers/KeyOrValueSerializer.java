@@ -15,6 +15,7 @@ package ch.sbb.perma.serializers;
  */
 public interface KeyOrValueSerializer<T> {
     StringSerializer STRING = new StringSerializer();
+    ShortStringSerializer SHORT_STRING = new ShortStringSerializer();
     IntegerSerializer INTEGER = new IntegerSerializer();
     LongSerializer LONG = new LongSerializer();
     ByteSerializer BYTE = new ByteSerializer();
