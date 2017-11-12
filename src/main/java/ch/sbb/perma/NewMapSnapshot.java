@@ -40,7 +40,7 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
     }
 
     @Override
-    public MapSnapshot writeNext(Map<K,V> current)  throws IOException {
+    public MapSnapshot<K,V> writeNext(Map<K,V> current)  throws IOException {
         return writeNext(ImmutableMap.copyOf(current));
     }
 
@@ -50,7 +50,7 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
             return this;
         }
         FileGroup newFullFileGroup = files.withNextFull();
-        MapFileData fullData = MapFileData
+        MapFileData<K,V> fullData = MapFileData
                                 .createNewFull(name, currentImmutable)
                                 .writeTo(newFullFileGroup.fullFile(),
                                          keySerializer,

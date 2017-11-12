@@ -67,9 +67,9 @@ public class MapFileData<K,V> {
                                                                      KeyOrValueSerializer<V> valueSerializer,
                                                                      MapFileData<K, V> previousData,
                                                                      Map<K, V> collector) throws IOException {
-        MapFileData latestData = previousData;
+        MapFileData<K,V> latestData = previousData;
         for(File deltaFile : deltaFiles) {
-            MapFileData next = MapFileData
+            MapFileData<K,V> next = MapFileData
                     .readFrom(deltaFile, keySerializer, valueSerializer)
                     .addTo(collector);
             if (!next.header.isNextDeltaFileOf(latestData.header)) {
@@ -101,7 +101,7 @@ public class MapFileData<K,V> {
             Header header = Header.readFrom(in);
             int count = 0;
             while (true) {
-                MapEntryRecord record = MapEntryRecord.readFrom(in, keySerializer, valueSerializer);
+                MapEntryRecord<K,V> record = MapEntryRecord.readFrom(in, keySerializer, valueSerializer);
                 if (record == null) {
                     break; // EOF
                 }
@@ -111,7 +111,7 @@ public class MapFileData<K,V> {
             if(!header.hasSize(count)) {
                 throw new HeaderMismatchException("Invalid size, mismatch between header and stored size");
             }
-            return new MapFileData(header, newOrUpdated.build(), deleted.build());
+            return new MapFileData<>(header, newOrUpdated.build(), deleted.build());
         }
     }
 

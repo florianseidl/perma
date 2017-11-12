@@ -83,7 +83,7 @@ class Header {
     static Header readFrom(InputStream in) throws IOException {
         byte[] marker = new BinaryReader(in).read(FILE_MARKER.length);
         if(!Arrays.equals(marker, FILE_MARKER)) {
-            throw new InvalidDataException(String.format("Not am Writable file, file marker invalid: %s", marker));
+            throw new InvalidDataException(String.format("Not am Writable file, file marker invalid: %s", new String(marker,UTF_8)));
         }
         BinaryReader readerWithChecksum = new BinaryReader(in, new CRC32());
         readerWithChecksum.readShort(); // version is ignored for now

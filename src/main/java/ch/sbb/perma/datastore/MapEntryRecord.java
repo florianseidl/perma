@@ -126,7 +126,7 @@ class MapEntryRecord<K,V> {
         byte[] keyAsBytes = readerWithChecksum.readWithLength();
         byte[] valueAsBytes = readerWithChecksum.readWithLength();
         if (!readerWithChecksum.readAndCheckChecksum()) {
-            throw new InvalidDataException(String.format("Record checksum mismatch"));
+            throw new InvalidDataException("Record checksum mismatch");
         }
         return recordType.createRecord(keyAsBytes, valueAsBytes, keySerializer, valueSerializer);
     }

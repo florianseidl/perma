@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableCollection;
  * @since 1.0, 2017.
  */
 public abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>, T> implements KeyOrValueSerializer<C> {
-    private KeyOrValueSerializer<T> itemSerializier;
+    private final KeyOrValueSerializer<T> itemSerializier;
 
     public ImmutableCollectionSerializer(KeyOrValueSerializer<T> itemSerializier) {
         this.itemSerializier = itemSerializier;

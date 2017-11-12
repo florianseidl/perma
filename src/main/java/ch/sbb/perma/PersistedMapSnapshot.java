@@ -44,7 +44,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
     PersistedMapSnapshot(String name,
                          FileGroup files,
                          ImmutableMap<K, V> mapSnapshot,
-                         MapFileData persited,
+                         MapFileData<K,V> persited,
                          KeyOrValueSerializer<K> keySerializer,
                          KeyOrValueSerializer<V> valueSerializer) {
         this.name = name;
@@ -61,13 +61,13 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                                        KeyOrValueSerializer<V> valueSerializer) throws IOException{
         LOG.debug("Loading persisted Snapshot from files latestFiles {}", latestFiles);
         Map<K,V> collector = new HashMap<>();
-        MapFileData latestData = MapFileData.readFileGroupAndCollect(
+        MapFileData<K,V> latestData = MapFileData.readFileGroupAndCollect(
                 latestFiles.fullFile(),
                 latestFiles.deltaFiles(),
                 keySerializer,
                 valueSerializer,
                 collector);
-        return new PersistedMapSnapshot<K,V>(
+        return new PersistedMapSnapshot<>(
                 name,
                 latestFiles,
                 ImmutableMap.copyOf(collector),

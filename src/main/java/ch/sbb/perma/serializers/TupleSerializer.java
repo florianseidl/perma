@@ -32,6 +32,7 @@ public abstract class TupleSerializer<T extends Tuple> implements KeyOrValueSeri
         return writer.toByteArray();
     }
 
+    @SuppressWarnings("unchecked")
     private static byte[] toByteArray(KeyOrValueSerializer serializer, Object value) {
         byte[] bytes = serializer.toByteArray(value);
         if(bytes == null) {
