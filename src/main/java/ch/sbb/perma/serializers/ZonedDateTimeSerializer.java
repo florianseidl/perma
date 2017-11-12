@@ -11,6 +11,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 
+/**
+ * @author u206123 (Florian Seidl)
+ * @since 1.0, 2017.
+ */
 public class ZonedDateTimeSerializer implements KeyOrValueSerializer<ZonedDateTime> {
     private final int lengthOfLocalDateTimeAsBytes;
 

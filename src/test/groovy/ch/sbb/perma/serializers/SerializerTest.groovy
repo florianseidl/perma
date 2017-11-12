@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.javatuples.Pair
 import org.javatuples.Triplet
+import org.javatuples.Unit
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -35,6 +36,23 @@ class SerializerTest extends Specification {
         new LongSerializer()                                        | Long.MAX_VALUE
         new LongSerializer()                                        | 0L
         new LongSerializer()                                        | Long.MIN_VALUE
+        new ByteSerializer()                                        | Byte.MAX_VALUE
+        new ByteSerializer()                                        | Byte.MIN_VALUE
+        new ShortSerializer()                                       | Short.MAX_VALUE
+        new ShortSerializer()                                       | Short.MIN_VALUE
+        new FloatSerializer()                                       | Float.MAX_VALUE
+        new FloatSerializer()                                       | 0.0f
+        new FloatSerializer()                                       | Float.MIN_VALUE
+        new DoubleSerializer()                                      | Double.MAX_VALUE
+        new DoubleSerializer()                                      | 0.0d
+        new DoubleSerializer()                                      | Double.MIN_VALUE
+        new BigDecimalSerializer()                                  | BigDecimal.ZERO
+        new BigDecimalSerializer()                                  | new BigDecimal('9999999999999999999999999999999999999.00000000000000000000000000000000000000001')
+        new BigIntegerSerializer()                                  | BigInteger.ZERO
+        new BigIntegerSerializer()                                  | new BigInteger('99999999999999999999999999999999999999999999999999999999999987654321')
+        new CharSerializer()                                        | 'a' as Character
+        new CharSerializer()                                        | ' ' as Character
+        new CharSerializer()                                        | 'Ü' as Character
         new OptionalStringSerializer()                              | of("foo")
         new OptionalStringSerializer()                              | empty()
         new ImmutableListSerializer(new StringSerializer())         | ImmutableList.builder().addAll(['a', 'b', 'c']).build()
@@ -53,6 +71,7 @@ class SerializerTest extends Specification {
         new TripletSerializer(new StringSerializer(),
                 new IntegerSerializer(),
                 new StringSerializer())                             | new Triplet(null, 42, 'bar')
+        new UnitSerializer(new IntegerSerializer())                 | new Unit(42)
         new LocalDateSerializer()                                   | LocalDate.MAX
         new LocalTimeSerializer()                                   | LocalTime.MAX
         new LocalDateSerializer()                                   | LocalDate.MIN

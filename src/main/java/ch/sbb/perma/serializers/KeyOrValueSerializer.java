@@ -17,6 +17,13 @@ public interface KeyOrValueSerializer<T> {
     StringSerializer STRING = new StringSerializer();
     IntegerSerializer INTEGER = new IntegerSerializer();
     LongSerializer LONG = new LongSerializer();
+    ByteSerializer BYTE = new ByteSerializer();
+    ShortSerializer SHORT = new ShortSerializer();
+    DoubleSerializer DOUBLE = new DoubleSerializer();
+    FloatSerializer FLOAT = new FloatSerializer();
+    BigDecimalSerializer BIG_DECIMAL = new BigDecimalSerializer();
+    BigIntegerSerializer BIG_INTEGER = new BigIntegerSerializer();
+    CharSerializer CHAR = new CharSerializer();
     JavaObjectSerializer JAVA_OBJECT = new JavaObjectSerializer();
     OptionalStringSerializer OPTIONAL_STRING = new OptionalStringSerializer();
     LocalDateSerializer LOCAL_DATE = new LocalDateSerializer();

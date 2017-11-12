@@ -7,8 +7,6 @@ package ch.sbb.perma.serializers;
 import com.google.common.primitives.Longs;
 
 /**
- * Serialize a long.
- *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */

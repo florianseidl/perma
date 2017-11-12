@@ -7,8 +7,6 @@ package ch.sbb.perma.serializers;
 import com.google.common.primitives.Ints;
 
 /**
- * Serialize an integer.
- *
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */

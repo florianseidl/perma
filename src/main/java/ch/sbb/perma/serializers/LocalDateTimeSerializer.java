@@ -10,6 +10,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+/**
+ * @author u206123 (Florian Seidl)
+ * @since 3.1, 2017.
+ */
 public class LocalDateTimeSerializer implements KeyOrValueSerializer<LocalDateTime> {
     private final int lengthOfLocalDateAsBytes;
 

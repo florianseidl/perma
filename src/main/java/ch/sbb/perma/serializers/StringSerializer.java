@@ -18,9 +18,6 @@ import java.nio.charset.Charset;
 public class StringSerializer implements KeyOrValueSerializer<String> {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    public StringSerializer() {
-    }
-
     @Override
     public byte[] toByteArray(String string) {
         return string.getBytes(UTF_8);

@@ -15,7 +15,10 @@ import org.javatuples.Tuple;
 public abstract class TupleSerializer<T extends Tuple> implements KeyOrValueSerializer<T> {
     private final KeyOrValueSerializer[] serializers;
 
-    protected TupleSerializer(KeyOrValueSerializer[] serializers) {
+    protected TupleSerializer(KeyOrValueSerializer... serializers) {
+        if(serializers == null) {
+            throw new NullPointerException("Serializers are null");
+        }
         this.serializers = serializers;
     }
 

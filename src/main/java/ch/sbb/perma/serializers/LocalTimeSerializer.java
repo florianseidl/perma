@@ -6,6 +6,10 @@ package ch.sbb.perma.serializers;
 
 import java.time.LocalTime;
 
+/**
+ * @author u206123 (Florian Seidl)
+ * @since 3.1, 2017.
+ */
 public class LocalTimeSerializer implements KeyOrValueSerializer<LocalTime> {
 
     @Override

@@ -11,6 +11,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 
+/**
+ * @author u206123 (Florian Seidl)
+ * @since 3.1, 2017.
+ */
 public class OffsetDateTimeSerializer implements KeyOrValueSerializer<OffsetDateTime> {
     private final int lengthOfLocalDateTimeAsBytes;
 

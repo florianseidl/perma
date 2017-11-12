@@ -57,7 +57,6 @@ public class CompoundBinaryReader {
         }
     }
 
-
     public long readLong() {
         try {
             return reader.readLong();

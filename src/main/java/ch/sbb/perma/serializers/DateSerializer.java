@@ -6,6 +6,10 @@ package ch.sbb.perma.serializers;
 
 import java.util.Date;
 
+/**
+ * @author u206123 (Florian Seidl)
+ * @since 3.1, 2017.
+ */
 public class DateSerializer implements KeyOrValueSerializer<Date> {
     @Override
     public byte[] toByteArray(Date date) {
