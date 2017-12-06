@@ -9,7 +9,7 @@ import spock.lang.Unroll
 
 import java.time.LocalDate
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.*
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
 
 class PerMaSetTest extends Specification {
     private static String LONG_STRING = 'the quick brown fox jumped over the lazy cat'.multiply(99999)

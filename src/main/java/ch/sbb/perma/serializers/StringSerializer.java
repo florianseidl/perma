@@ -2,12 +2,12 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import java.nio.charset.Charset;
 
 /**
- * Serialize Non-Null-Strings.
+ * Serialize non-null-Strings.
  * <p>
  *     The serialized form of Strings is UTF-8.
  * </p>
@@ -17,9 +17,6 @@ import java.nio.charset.Charset;
  */
 public class StringSerializer implements KeyOrValueSerializer<String> {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
-
-    StringSerializer() {
-    }
 
     @Override
     public byte[] toByteArray(String string) {

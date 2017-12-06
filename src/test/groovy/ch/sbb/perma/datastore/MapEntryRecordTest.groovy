@@ -10,8 +10,8 @@ import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.*
-import static ch.sbb.perma.datastore.NullValueSerializer.NULL
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
+import static ch.sbb.perma.serializers.NullValueSerializer.NULL
 
 class MapEntryRecordTest extends Specification {
 

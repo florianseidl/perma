@@ -8,7 +8,7 @@ import ch.sbb.perma.datastore.HeaderMismatchException
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.*
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
 
 class MapSnapshotTest extends Specification {
     private static String VALUE_A = 'value A'
