@@ -4,7 +4,7 @@
 
 package ch.sbb.perma;
 
-import ch.sbb.perma.datastore.KeyOrValueSerializer;
+import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ForwardingMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

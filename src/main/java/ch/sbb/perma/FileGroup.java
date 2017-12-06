@@ -38,7 +38,9 @@ class FileGroup {
                 return 0;
             }
             Matcher matcher = pattern.matcher(fileName);
-            matcher.find();
+            if(!matcher.find()) {
+                throw new IllegalArgumentException(String.format("Invalid file name %s", fileName));
+            }
             return Integer.parseInt(matcher.group(1));
         }
 
@@ -68,7 +70,7 @@ class FileGroup {
         this.deltaFileNames = deltaFileNames;
     }
 
-    static FileGroup list(File dir, String name) throws FileNotFoundException {
+    static FileGroup list(File dir, String name) {
         return latestFullFileName(dir, name)
                 .map(latestFullFileName -> new FileGroup(dir,
                                                             name,
