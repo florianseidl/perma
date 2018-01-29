@@ -12,6 +12,7 @@ import org.javatuples.Unit
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import java.nio.charset.Charset
 import java.time.*
 
 import static java.util.Optional.empty
@@ -32,6 +33,8 @@ class SerializerTest extends Specification {
         new StringSerializer()                                      | 'foo bar'
         new StringSerializer()                                      | ''
         new StringSerializer()                                      | ' '
+        new StringSerializer(StringSerializer.UTF_16BE)             | 'foo bar'
+        new StringSerializer(Charset.forName('ISO-8859-1'))         | 'foo bar'
         new IntegerSerializer()                                     | Integer.MAX_VALUE
         new IntegerSerializer()                                     | 0
         new IntegerSerializer()                                     | Integer.MIN_VALUE
@@ -129,5 +132,27 @@ class SerializerTest extends Specification {
 
         then:
         thrown IllegalArgumentException
+    }
+
+    @Unroll
+    def "serialized length #serializer.class.simpleName #value"() {
+        when:
+        def serialized = serializer.toByteArray(value)
+
+        then:
+        serialized.length == expectedLength
+
+        where:
+        serializer                                          | value | expectedLength
+        KeyOrValueSerializer.STRING                         | ''    | 0
+        KeyOrValueSerializer.STRING                         | 'a'   | 1
+        KeyOrValueSerializer.STRING                         | 'foo' | 3
+        new StringSerializer(StringSerializer.UTF_16BE)     | 'a'   | 2
+        new StringSerializer(StringSerializer.UTF_16BE)     | 'foo' | 6
+        new StringSerializer(StringSerializer.UTF_16BE)     | ''    | 0
+        new StringSerializer(Charset.forName('ISO-8859-1')) | 'a'   | 1
+        new StringSerializer(Charset.forName('ISO-8859-1')) | 'foo' | 3
+        KeyOrValueSerializer.INTEGER                        | 42    | 4
+        KeyOrValueSerializer.BYTE                           | (byte) 42 | 1
     }
 }

@@ -5,10 +5,7 @@
 package ch.sbb.perma.serializers;
 
 /**
- * Serialize short non-null-Strings to 2 bytes a character. Use String Serializer instead.
- * <p>
- *     The serialized form of Strings is UTF-16.
- * </p>
+ * Do not use. Use String Serializer instead.
  *
  * @author u206123 (Florian Seidl)
  * @since 3.1, 2017.

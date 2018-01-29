@@ -46,6 +46,7 @@ For a readonly map or set, update is the only operation accessing the disk after
 ## Serializers
 
 Perma comes with a selection of serializers and allows for simple addition of custom serilaizers.
+Serializers aim for a relatively efficient serialization of values.
 
 ### Plain Serializers
 
@@ -60,6 +61,14 @@ Object                                    | KeyOrValueSerializer.JAVA_OBJECT    
 LocalDateTime, LocalDate, LocalTime       | KeyOrValueSerializer.LOCAL_DATE_TIME, LOCAL_DATE, LOCAL_TIME   | java.time (Java 8 date)
 ZonedDateTime, OffsetDateTime             | KeyOrValueSerializer.ZONED_DATE_TIME, OFFSET_DATE_TIME         | java.time with Offset/Zone (Java 8)
 DateSerializer                            | KeyOrValueSerializer.DATE                                      | java.util (Java legacy date)
+
+### String Serializer
+
+KeyOrValueSerializer.STRING or new StringSerializer() encodes to UTF-8. This is the recomended format for most chases.
+
+If that is not desired (as it is inefficient for instance for chinese characters), StringSerializer can be constructed with an encoding as string parameter. 
+The recomended alternative is UTF-16 Big Endian and available as constant in String Serializer: new StringSerializer(StringSerializer.UTF-16BE). 
+Alternatively, any supported Charset can be used.
 
 ### Collection Serializers
 
@@ -92,6 +101,15 @@ Only Unit, Pair and Triplet are implemented, if you require other Tuples extend 
 There is an enum Serializer. It requires the enum class as parameter.
 
 * EnumSerializer(enumClass)
+
+### Array Serializers
+
+There are two array serializers:
+
+* ObjectArraySerializer(elementClass, elementSerializer)
+* StringArraySerializer an ObjectArraySerializer provided for convenience
+
+For the Object array seriaizer, you have to provide the element class and a serializer for individual elements.
 
 ### Own Serilaizers
 
