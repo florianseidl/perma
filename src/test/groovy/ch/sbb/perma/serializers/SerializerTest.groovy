@@ -52,11 +52,9 @@ class SerializerTest extends Specification {
         new BigDecimalSerializer()                                  | new BigDecimal('9999999999999999999999999999999999999.00000000000000000000000000000000000000001')
         new BigIntegerSerializer()                                  | BigInteger.ZERO
         new BigIntegerSerializer()                                  | new BigInteger('99999999999999999999999999999999999999999999999999999999999987654321')
-        new CharSerializer()                                        | 'a' as Character
-        new CharSerializer()                                        | ' ' as Character
-        new CharSerializer()                                        | 'Ü' as Character
-        new ShortStringSerializer()                                 | 'bli bla blo'
-        new ShortStringSerializer()                                 | ''
+        new CharacterSerializer()                                   | 'a' as Character
+        new CharacterSerializer()                                   | ' ' as Character
+        new CharacterSerializer()                                   | 'Ü' as Character
         new OptionalStringSerializer()                              | of("foo")
         new OptionalStringSerializer()                              | empty()
         new ImmutableListSerializer(new StringSerializer())         | ImmutableList.builder().addAll(['a', 'b', 'c']).build()
@@ -88,7 +86,38 @@ class SerializerTest extends Specification {
         new OffsetDateTimeSerializer()                              | OffsetDateTime.MIN
         new DateSerializer()                                        | new Date(Long.MAX_VALUE)
         new DateSerializer()                                        | new Date(0)
+        new EnumSerializer(DayOfWeek.class)                         | DayOfWeek.FRIDAY
+        new ArrayListSerializer(new StringSerializer())             | new ArrayList<String>(['a', 'b', 'c'])
+        new ArrayListSerializer(new StringSerializer())             | new ArrayList<String>()
+        new HashSetSerializer(new IntegerSerializer())              | new HashSet<Integer>([1, 2, 3])
+        new HashSetSerializer(new IntegerSerializer())              | new HashSet<Integer>()
+        new LinkedListSerializer(new StringSerializer())            | new LinkedList<String>(['a', 'b', 'c'])
+        new LinkedListSerializer(new StringSerializer())            | new LinkedList<String>()
+        new CharSerializer()                                        | 'a' as Character
+        new CharSerializer()                                        | ' ' as Character
+        new CharSerializer()                                        | 'Ü' as Character
+        new ShortStringSerializer()                                 | 'bli bla blo'
+        new ShortStringSerializer()                                 | ''
+    }
 
+    @Unroll
+    def "serialize deseralize array #serializer.class.simpleName #value"() {
+        when:
+        def valueDeseralized = serializer.fromByteArray(serializer.toByteArray(value))
+
+        then:
+        Arrays.equals(valueDeseralized, value)
+
+        where:
+        serializer                                         | value
+        new ObjectArraySerializer(
+                Integer.class,
+                KeyOrValueSerializer.INTEGER)              | [42, 7] as Integer[]
+        new ObjectArraySerializer(
+                Integer.class,
+                KeyOrValueSerializer.INTEGER)              | [] as Integer[]
+        new StringArraySerializer()                        | ['foo', 'bar'] as String[]
+        new StringArraySerializer()                        | [] as String[]
     }
 
     def "serialize to null not allowed for tuples"() {

@@ -5,7 +5,7 @@
 package ch.sbb.perma.serializers;
 
 /**
- * Serialize short non-null-Strings to 2 bytes a character. Ideal for short strings of to 4 or 5 characters.
+ * Serialize short non-null-Strings to 2 bytes a character. Use String Serializer instead.
  * <p>
  *     The serialized form of Strings is UTF-16.
  * </p>
@@ -13,6 +13,7 @@ package ch.sbb.perma.serializers;
  * @author u206123 (Florian Seidl)
  * @since 3.1, 2017.
  */
+@Deprecated
 public class ShortStringSerializer implements KeyOrValueSerializer<String> {
     @Override
     public byte[] toByteArray(String string) {
