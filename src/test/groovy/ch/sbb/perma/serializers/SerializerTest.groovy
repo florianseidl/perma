@@ -147,11 +147,14 @@ class SerializerTest extends Specification {
         KeyOrValueSerializer.STRING                         | ''    | 0
         KeyOrValueSerializer.STRING                         | 'a'   | 1
         KeyOrValueSerializer.STRING                         | 'foo' | 3
+        KeyOrValueSerializer.STRING                         | 'föö' | 5
         new StringSerializer(StringSerializer.UTF_16BE)     | 'a'   | 2
         new StringSerializer(StringSerializer.UTF_16BE)     | 'foo' | 6
         new StringSerializer(StringSerializer.UTF_16BE)     | ''    | 0
+        new StringSerializer(StringSerializer.UTF_16BE)     | 'föö' | 6
         new StringSerializer(Charset.forName('ISO-8859-1')) | 'a'   | 1
         new StringSerializer(Charset.forName('ISO-8859-1')) | 'foo' | 3
+        new StringSerializer(Charset.forName('ISO-8859-1')) | 'föö' | 3
         KeyOrValueSerializer.INTEGER                        | 42    | 4
         KeyOrValueSerializer.BYTE                           | (byte) 42 | 1
     }
