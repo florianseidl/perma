@@ -27,7 +27,8 @@ public abstract class TupleSerializer<T extends Tuple> implements KeyOrValueSeri
         CompoundBinaryWriter writer = new CompoundBinaryWriter();
         for(int i = 0; i < tuple.getSize(); i++) {
             writer.writeWithLength(tuple.getValue(i) != null ?
-                    toByteArray(serializers[i], tuple.getValue(i)) : null);
+                    toByteArray(serializers[i], tuple.getValue(i)) :
+                    null);
         }
         return writer.toByteArray();
     }
@@ -50,7 +51,8 @@ public abstract class TupleSerializer<T extends Tuple> implements KeyOrValueSeri
         for(int i = 0; i < serializers.length; i++) {
             byte[] valueAsBytes = reader.readWithLength();
             values[i] = valueAsBytes != null ?
-                    serializers[i].fromByteArray(valueAsBytes) : null;
+                    serializers[i].fromByteArray(valueAsBytes) :
+                    null;
         }
         return createFrom(values);
     }

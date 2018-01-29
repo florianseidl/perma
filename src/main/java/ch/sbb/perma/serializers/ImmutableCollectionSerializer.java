@@ -13,10 +13,10 @@ import com.google.common.collect.ImmutableCollection;
  * @since 1.0, 2017.
  */
 public abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>, T> implements KeyOrValueSerializer<C> {
-    private final KeyOrValueSerializer<T> itemSerializier;
+    private final KeyOrValueSerializer<T> itemSerializer;
 
     public ImmutableCollectionSerializer(KeyOrValueSerializer<T> itemSerializier) {
-        this.itemSerializier = itemSerializier;
+        this.itemSerializer = itemSerializier;
     }
 
     @Override
@@ -24,7 +24,7 @@ public abstract class ImmutableCollectionSerializer<C extends ImmutableCollectio
         CompoundBinaryWriter writer = new CompoundBinaryWriter();
         writer.writeInt(collection.size());
         for (T item : collection) {
-            writer.writeWithLength(itemSerializier.toByteArray(item));
+            writer.writeWithLength(itemSerializer.toByteArray(item));
         }
         return writer.toByteArray();
     }
@@ -35,10 +35,10 @@ public abstract class ImmutableCollectionSerializer<C extends ImmutableCollectio
         int collectionSize = reader.readInt();
         ImmutableCollection.Builder<T> builder = collectionBuilder();
         for (int i = 0; i < collectionSize; i++) {
-            builder.add(itemSerializier.fromByteArray(reader.readWithLength()));
+            builder.add(itemSerializer.fromByteArray(reader.readWithLength()));
         }
         return (C) builder.build();
     }
 
-    abstract ImmutableCollection.Builder<T> collectionBuilder();
+    protected abstract ImmutableCollection.Builder<T> collectionBuilder();
 }

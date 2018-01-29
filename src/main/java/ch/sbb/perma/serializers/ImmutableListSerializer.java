@@ -22,7 +22,7 @@ public class ImmutableListSerializer<T> extends ImmutableCollectionSerializer<Im
     }
 
     @Override
-    ImmutableCollection.Builder<T> collectionBuilder() {
+    protected ImmutableCollection.Builder<T> collectionBuilder() {
         return ImmutableList.builder();
     }
 }
