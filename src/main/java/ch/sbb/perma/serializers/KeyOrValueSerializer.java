@@ -25,6 +25,7 @@ public interface KeyOrValueSerializer<T> {
     BigDecimalSerializer BIG_DECIMAL = new BigDecimalSerializer();
     BigIntegerSerializer BIG_INTEGER = new BigIntegerSerializer();
     CharSerializer CHAR = new CharSerializer();
+    CharacterSerializer CHARACTER = new CharacterSerializer();
     JavaObjectSerializer JAVA_OBJECT = new JavaObjectSerializer();
     OptionalStringSerializer OPTIONAL_STRING = new OptionalStringSerializer();
     LocalDateSerializer LOCAL_DATE = new LocalDateSerializer();
