@@ -79,7 +79,6 @@ class Header {
         return this;
     }
 
-
     static Header readFrom(InputStream in) throws IOException {
         byte[] marker = new BinaryReader(in).read(FILE_MARKER.length);
         if(!Arrays.equals(marker, FILE_MARKER)) {

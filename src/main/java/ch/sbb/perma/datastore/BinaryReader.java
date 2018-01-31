@@ -62,6 +62,9 @@ public class BinaryReader {
 
     public byte[] read(int length) throws IOException {
         byte[] bytes = new byte[length];
+        if(length == 0) {
+            return bytes;
+        }
         if(in.read(bytes) != length) {
             throw new InvalidDataException("Less bytes available than expected");
         }
