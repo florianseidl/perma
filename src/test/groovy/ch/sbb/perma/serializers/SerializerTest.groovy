@@ -70,6 +70,8 @@ class SerializerTest extends Specification {
                 new IntegerSerializer())                            | new Pair('foo', 42)
         new PairSerializer(new StringSerializer(),
                 new IntegerSerializer())                            | new Pair('foo', null)
+        new PairSerializer(new StringSerializer(),
+                new StringSerializer())                            | new Pair('', '')
         new TripletSerializer(new StringSerializer(),
                 new IntegerSerializer(),
                 new LongSerializer())                               | new Triplet('foo', 42, 111L)
