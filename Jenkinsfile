@@ -2,8 +2,6 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2018.
  */
 
-#!groovy
-
 library identifier: 'pipeline-helper@feature/trunk-based-releases',
         retriever: modernSCM(
                 [$class       : 'GitSCMSource',
