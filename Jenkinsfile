@@ -1,15 +1,7 @@
 /*
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2018.
  */
-
-library identifier: 'pipeline-helper@feature/trunk-based-releases',
-        retriever: modernSCM(
-                [$class       : 'GitSCMSource',
-                 credentialsId: '',
-                 id           : '8ae53627-89db-4535-92fd-218ac8e6435f',
-                 remote       : 'https://code.sbb.ch/scm/kd_esta/pipeline-helper.git'])
-
-
+@Library(['pipeline-helper']) _
 
 pipeline {
     agent { label 'java' }
@@ -26,7 +18,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                ci_releaseMvnLean([:])
+                ci_releaseMvnLean()
             }
         }
     }
