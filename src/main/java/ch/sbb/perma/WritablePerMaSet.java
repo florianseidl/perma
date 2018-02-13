@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -63,7 +64,7 @@ public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writable {
         Stopwatch stopwatch = Stopwatch.createStarted();
         WritablePerMaSet<T> permaSet = new WritablePerMaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
         stopwatch.stop();
-        LOG.debug("Writable PerMaSet {} loaded or created successfully in {} ms", name, stopwatch.elapsed().get(ChronoUnit.MILLIS));
+        LOG.debug("Writable PerMaSet {} loaded or created successfully in {} ms", name, stopwatch.elapsed().toMillis());
         return permaSet;
     }
 
