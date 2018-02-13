@@ -4,7 +4,7 @@
 
 package ch.sbb.perma;
 
-import ch.sbb.perma.datastore.KeyOrValueSerializer;
+import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ForwardingSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static ch.sbb.perma.datastore.NullValueSerializer.NULL;
+import static ch.sbb.perma.serializers.NullValueSerializer.NULL;
 
 /**
  * Read only persistent set.

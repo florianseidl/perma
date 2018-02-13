@@ -11,7 +11,7 @@ import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.STRING
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.STRING
 import static java.util.UUID.randomUUID
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY
 /**

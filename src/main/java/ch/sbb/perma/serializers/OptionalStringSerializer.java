@@ -2,7 +2,7 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import java.nio.charset.Charset;
 import java.util.Optional;
@@ -19,9 +19,6 @@ import java.util.Optional;
  */
 public class OptionalStringSerializer implements KeyOrValueSerializer<Optional<String>> {
     private static final Charset UTF_8 = Charset.forName("UTF-8");
-
-    OptionalStringSerializer() {
-    }
 
     @Override
     public byte[] toByteArray(Optional<String> optionalString) {

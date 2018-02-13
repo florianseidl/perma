@@ -24,12 +24,12 @@ public class BinaryReader {
     private final InputStream in;
     private final Checksum checksum;
 
-    BinaryReader(InputStream in, Checksum crc32) {
+    public BinaryReader(InputStream in, Checksum crc32) {
         this.in = in;
         this.checksum = crc32;
     }
 
-    BinaryReader(InputStream in) {
+    public BinaryReader(InputStream in) {
         this.in = in;
         this.checksum = NoChecksum.INSTANCE;
     }
@@ -62,7 +62,12 @@ public class BinaryReader {
 
     public byte[] read(int length) throws IOException {
         byte[] bytes = new byte[length];
-        in.read(bytes);
+        if(length == 0) {
+            return bytes;
+        }
+        if(in.read(bytes) != length) {
+            throw new InvalidDataException("Less bytes available than expected");
+        }
         checksum.update(bytes, 0, length);
         return bytes;
     }

@@ -2,14 +2,14 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import org.javatuples.Triplet;
 
 /**
  * Serializer and deserializer for javatuples Triplets.
  * <p>
- *     Requires 3 serializers for the 3 values.
+ *     Requires 3 serializers for the 3 values. They may not seriaize non-null values to null.
  * </p>
  *
  * @author u206123 (Florian Seidl)
@@ -20,7 +20,7 @@ public class TripletSerializer<A,B,C> extends TupleSerializer<Triplet<A,B,C>> {
     public TripletSerializer(KeyOrValueSerializer<A> value0Serializer,
                              KeyOrValueSerializer<B> value1Serializer,
                              KeyOrValueSerializer<C> value2Serializer) {
-        super(new KeyOrValueSerializer[]{value0Serializer, value1Serializer,value2Serializer});
+        super(value0Serializer, value1Serializer,value2Serializer);
     }
 
     @Override

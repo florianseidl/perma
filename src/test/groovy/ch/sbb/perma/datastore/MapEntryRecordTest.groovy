@@ -10,15 +10,15 @@ import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static ch.sbb.perma.datastore.KeyOrValueSerializer.*
-import static ch.sbb.perma.datastore.NullValueSerializer.NULL
+import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
+import static ch.sbb.perma.serializers.NullValueSerializer.NULL
 
 class MapEntryRecordTest extends Specification {
 
     @Unroll
     def "write read #entryKey"() {
         given:
-        def out = new ByteOutputStream()
+        def out = new ByteArrayOutputStream()
 
         when:
         def record = MapEntryRecord.newOrUpdated(entryKey, entryValue)
@@ -27,7 +27,7 @@ class MapEntryRecordTest extends Specification {
                 keySerializer,
                 valueSerializer)
         def reread = record.readFrom(
-                new ByteArrayInputStream(out.bytes),
+                new ByteArrayInputStream(out.toByteArray()),
                 keySerializer,
                 valueSerializer)
 
@@ -38,6 +38,8 @@ class MapEntryRecordTest extends Specification {
         entryKey | entryValue     | keySerializer  | valueSerializer
         'foo'    | 'bar'          | STRING         | STRING
         ''       | 'bar'          | STRING         | STRING
+        'foo'    | ''             | STRING         | STRING
+        ''       | ''             | STRING         | STRING
         'foo'    | 42             | STRING         | INTEGER
         3        | Long.MAX_VALUE | INTEGER        | LONG
     }

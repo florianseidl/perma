@@ -2,7 +2,7 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import com.google.common.collect.ImmutableCollection;
 
@@ -12,33 +12,33 @@ import com.google.common.collect.ImmutableCollection;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>, T> implements KeyOrValueSerializer<C> {
-    private KeyOrValueSerializer<T> itemSerializier;
+public abstract class ImmutableCollectionSerializer<C extends ImmutableCollection<T>, T> implements KeyOrValueSerializer<C> {
+    private final KeyOrValueSerializer<T> itemSerializer;
 
     public ImmutableCollectionSerializer(KeyOrValueSerializer<T> itemSerializier) {
-        this.itemSerializier = itemSerializier;
+        this.itemSerializer = itemSerializier;
     }
 
     @Override
     public byte[] toByteArray(C collection) {
-        CollectionBinaryWriter writer = new CollectionBinaryWriter();
-        writer.writeLength(collection.size());
+        CompoundBinaryWriter writer = new CompoundBinaryWriter();
+        writer.writeInt(collection.size());
         for (T item : collection) {
-            writer.writeNext(itemSerializier.toByteArray(item));
+            writer.writeWithLength(itemSerializer.toByteArray(item));
         }
         return writer.toByteArray();
     }
 
     @SuppressWarnings("unchecked")
     public C fromByteArray(byte[] bytes) {
-        CollectionBinaryReader reader = new CollectionBinaryReader(bytes);
-        int collectionSize = reader.readLength();
+        CompoundBinaryReader reader = new CompoundBinaryReader(bytes);
+        int collectionSize = reader.readInt();
         ImmutableCollection.Builder<T> builder = collectionBuilder();
         for (int i = 0; i < collectionSize; i++) {
-            builder.add(itemSerializier.fromByteArray(reader.readNext()));
+            builder.add(itemSerializer.fromByteArray(reader.readWithLength()));
         }
         return (C) builder.build();
     }
 
-    abstract ImmutableCollection.Builder<T> collectionBuilder();
+    protected abstract ImmutableCollection.Builder<T> collectionBuilder();
 }

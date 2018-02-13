@@ -4,7 +4,7 @@
 
 package ch.sbb.perma;
 
-import ch.sbb.perma.datastore.KeyOrValueSerializer;
+import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ForwardingSet;
 import com.google.common.collect.ImmutableMap;
@@ -20,8 +20,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static ch.sbb.perma.datastore.NullValueSerializer.NULL;
-import static ch.sbb.perma.datastore.NullValueSerializer.NULL_OBJECT;
+import static ch.sbb.perma.serializers.NullValueSerializer.NULL;
+import static ch.sbb.perma.serializers.NullValueSerializer.NULL_OBJECT;
 
 /**
  * A mutable persistent set.

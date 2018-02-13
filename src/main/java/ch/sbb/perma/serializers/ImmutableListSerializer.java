@@ -2,7 +2,7 @@
  * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
  */
 
-package ch.sbb.perma.datastore;
+package ch.sbb.perma.serializers;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -22,7 +22,7 @@ public class ImmutableListSerializer<T> extends ImmutableCollectionSerializer<Im
     }
 
     @Override
-    ImmutableCollection.Builder<T> collectionBuilder() {
+    protected ImmutableCollection.Builder<T> collectionBuilder() {
         return ImmutableList.builder();
     }
 }
