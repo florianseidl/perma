@@ -5,6 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ForwardingSet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -58,7 +59,11 @@ public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writable {
                                                     String name,
                                                     KeyOrValueSerializer<T> serializer) throws IOException {
         LOG.info("Loading writabe PerMaSet {} from directory {}", name, dir);
-        return new WritablePerMaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        WritablePerMaSet<T> permaSet = new WritablePerMaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
+        stopwatch.stop();
+        LOG.debug("Writable PerMaSet {} loaded or created successfully in {} ms", name, stopwatch.elapsed().toMillis());
+        return permaSet;
     }
 
     public void persist() throws IOException {
