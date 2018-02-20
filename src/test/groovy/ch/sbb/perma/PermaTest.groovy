@@ -19,7 +19,7 @@ import java.time.LocalDate
 
 import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
 
-class PerMaTest extends Specification {
+class PermaTest extends Specification {
     private static String FOO = 'foobar'
     private static String NIX = 'nix als bledsinn'
     private static String LONG_STRING = 'the quick brown fox jumped over the lazy cat'.multiply(99999)
@@ -37,15 +37,15 @@ class PerMaTest extends Specification {
     @Unroll
     def "write read #map.keySet()"() {
         given:
-        def perMa = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        def perma = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         when:
-        perMa.putAll(map)
-        perMa.persist()
-        def perMaReread = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        perma.putAll(map)
+        perma.persist()
+        def permaReread = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         then:
-        perMaReread.equals(map)
+        permaReread.equals(map)
 
         where:
         map                                               | keySerializer | valueSerializer
@@ -62,15 +62,15 @@ class PerMaTest extends Specification {
     @Unroll
     def "write read collection value #nr"() {
         given:
-        def perMa = WritablePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
+        def perma = WritablePerma.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         when:
-        perMa.putAll(map)
-        perMa.persist()
-        def perMaReread = WritablePerMa.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
+        perma.putAll(map)
+        perma.persist()
+        def permaReread = WritablePerma.loadOrCreate(tempDir, "testmap", STRING, valueSerializer)
 
         then:
-        perMaReread['key'].equals(expected)
+        permaReread['key'].equals(expected)
 
         where:
         nr | map                                                        | valueSerializer                       || expected
@@ -84,15 +84,15 @@ class PerMaTest extends Specification {
     @Unroll
     def "write read tuple value #map.keySet()"() {
         given:
-        def perMa = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        def perma = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         when:
-        perMa.putAll(map)
-        perMa.persist()
-        def perMaReread = WritablePerMa.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        perma.putAll(map)
+        perma.persist()
+        def permaReread = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
 
         then:
-        perMaReread.equals(map)
+        permaReread.equals(map)
 
         where:
         map                          | keySerializer                                                         | valueSerializer
@@ -106,55 +106,55 @@ class PerMaTest extends Specification {
     def "write read string map"() {
         given:
         def map = ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING]
-        def perMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perma = WritablePerma.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        perMa.putAll(map)
-        perMa.persist();
-        def perMaReread = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        perma.putAll(map)
+        perma.persist();
+        def permaReread = WritablePerma.loadOrCreateStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.equals(map)
+        permaReread.equals(map)
     }
 
     def "write read readOnly string map"() {
         given:
         def map = ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING]
-        def perMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perma = WritablePerma.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        perMa.putAll(map)
-        perMa.persist()
-        def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+        perma.putAll(map)
+        perma.persist()
+        def permaReread = ReadOnlyPerma.loadStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.equals(map)
+        permaReread.equals(map)
     }
 
     def "read readOnly string2String no files"() {
         when:
-        def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+        def permaReread = ReadOnlyPerma.loadStringMap(tempDir, "testmap")
 
         then:
-        perMaReread.equals([:])
+        permaReread.equals([:])
     }
 
     @Unroll
     def "write read write refresh readOnly string map #initial.keySet() #update.keySet()"() {
         given:
-        def writablePerMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def writablePerma = WritablePerma.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        writablePerMa.putAll(initial)
-        writablePerMa.persist()
-        def readOnlyPerMa = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
-        writablePerMa.clear()
-        writablePerMa.putAll(update)
-        writablePerMa.persist()
-        readOnlyPerMa.refresh()
+        writablePerma.putAll(initial)
+        writablePerma.persist()
+        def readOnlyPerma = ReadOnlyPerma.loadStringMap(tempDir, "testmap")
+        writablePerma.clear()
+        writablePerma.putAll(update)
+        writablePerma.persist()
+        readOnlyPerma.refresh()
 
         then:
-        readOnlyPerMa.equals(update)
+        readOnlyPerma.equals(update)
 
         where:
         initial                                            | update
@@ -168,44 +168,44 @@ class PerMaTest extends Specification {
 
     def "write read write refresh with compact readOnly string map"() {
         given:
-        def writablePerMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def writablePerma = WritablePerma.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
-        writablePerMa.putAll(['foo':FOO])
-        writablePerMa.persist()
-        def readOnlyPerMa = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+        writablePerma.putAll(['foo':FOO])
+        writablePerma.persist()
+        def readOnlyPerma = ReadOnlyPerma.loadStringMap(tempDir, "testmap")
         [['foo':FOO, 'N I X':NIX],
          ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING],
          ['N I X':NIX, 'long store':LONG_STRING]].forEach {
-            writablePerMa.clear()
-            writablePerMa.putAll(it)
-            writablePerMa.persist()
+            writablePerma.clear()
+            writablePerma.putAll(it)
+            writablePerma.persist()
         }
-        writablePerMa.compact()
-        readOnlyPerMa.refresh()
+        writablePerma.compact()
+        readOnlyPerma.refresh()
 
         then:
-        readOnlyPerMa.equals(['N I X':NIX, 'long store':LONG_STRING])
+        readOnlyPerma.equals(['N I X':NIX, 'long store':LONG_STRING])
     }
 
     def "write compact reread string map"() {
         given:
-        def perMa = WritablePerMa.loadOrCreateStringMap(tempDir, "testmap")
+        def perma = WritablePerma.loadOrCreateStringMap(tempDir, "testmap")
 
         when:
         [['foo':FOO],
          ['foo':FOO, 'N I X':NIX],
          ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING],
          ['N I X':NIX, 'long store':LONG_STRING]].forEach {
-            perMa.persist()
-            perMa.clear()
-            perMa.putAll(it)
+            perma.persist()
+            perma.clear()
+            perma.putAll(it)
         }
-        perMa.compact()
-        def perMaReread = ReadOnlyPerMa.loadStringMap(tempDir, "testmap")
+        perma.compact()
+        def permaReread = ReadOnlyPerma.loadStringMap(tempDir, "testmap")
 
         then:
-        perMa.equals(['N I X':NIX, 'long store':LONG_STRING])
-        perMaReread.equals(['N I X':NIX, 'long store':LONG_STRING])
+        perma.equals(['N I X':NIX, 'long store':LONG_STRING])
+        permaReread.equals(['N I X':NIX, 'long store':LONG_STRING])
     }
 }

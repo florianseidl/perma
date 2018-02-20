@@ -23,29 +23,29 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class ReadOnlyPerMa<K,V> extends ForwardingMap<K,V> implements Refreshable {
-    private final static Logger LOG = LoggerFactory.getLogger(ReadOnlyPerMa.class);
+public class ReadOnlyPerma<K,V> extends ForwardingMap<K,V> implements RefreshableMap<K,V> {
+    private final static Logger LOG = LoggerFactory.getLogger(ReadOnlyPerma.class);
 
     private MapSnapshot<K,V> lastLoaded;
     private final ReentrantLock loadLock = new ReentrantLock();
 
-    private ReadOnlyPerMa(MapSnapshot<K, V> loaded) {
+    private ReadOnlyPerma(MapSnapshot<K, V> loaded) {
         this.lastLoaded = loaded;
     }
 
-    public static ReadOnlyPerMa loadStringMap(File dir, String name) throws IOException {
+    public static ReadOnlyPerma loadStringMap(File dir, String name) throws IOException {
         return load(dir,
                     name,
                     KeyOrValueSerializer.STRING,
                     KeyOrValueSerializer.STRING);
     }
 
-    public static <K,V> ReadOnlyPerMa load(File dir,
-                                              String name,
-                                              KeyOrValueSerializer<K> keySerializer,
-                                              KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        LOG.info("Loading readonly PerMa {} from directory {}", name, dir);
-        return new ReadOnlyPerMa<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
+    public static <K,V> ReadOnlyPerma load(File dir,
+                                           String name,
+                                           KeyOrValueSerializer<K> keySerializer,
+                                           KeyOrValueSerializer<V> valueSerializer) throws IOException {
+        LOG.info("Loading readonly Perma {} from directory {}", name, dir);
+        return new ReadOnlyPerma<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 
     public void refresh() throws IOException {

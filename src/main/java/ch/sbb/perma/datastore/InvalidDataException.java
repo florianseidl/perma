@@ -5,7 +5,7 @@
 package ch.sbb.perma.datastore;
 
 /**
- * File format of read PerMa file is not valid.
+ * File format of read Perma file is not valid.
  * <ul>
  *     <li>Invalid file or record marker</li>
  *     <li>CRC32 Checksum error in file header</li>
@@ -15,7 +15,7 @@ package ch.sbb.perma.datastore;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class InvalidDataException extends PerMaDatastoreException {
+public class InvalidDataException extends PermaDatastoreException {
     public InvalidDataException(String s) {
         super(s);
     }

@@ -11,16 +11,16 @@ Disadvantage: slow write, slow startup
 ## Usage
 
 The public API is
-* WritablePerMa: A mutable persistent map
-* WritablePerMaSet: A mutable persistent set
-* ReadOnlyPerMa: An immutable but updatable map
-* ReadOnlyPerMaSet: An immutable but updatable set
+* WritablePerma: A mutable persistent map
+* WritablePermaSet: A mutable persistent set
+* ReadOnlyPerma: An immutable but updatable map
+* ReadOnlyPermaSet: An immutable but updatable set
 
 In addition to that there are KeyOrValueSerializers.
 
 #### Examples
 ```java
-WritablePerMa perMa = WritabePerMa.loadOrCreate(tempDir, 
+WritablePerma perma = WritabePerma.loadOrCreate(tempDir, 
                                                 "mymap", 
                                                 KeyOrValueSerializer.INTEGER, 
                                                 KeyOrValueSerializer.STRING)
@@ -29,7 +29,7 @@ perma.put(...)
 perma.persist()
 ```
 ```java
-ReadOnlyPerMa perMa = ReadOnlyPerMa.loadStringMap(tempDir, 
+ReadOnlyPerma perma = ReadOnlyPerma.loadStringMap(tempDir, 
                                                   "mymap")
 perma.get(...)
 ....
@@ -72,15 +72,12 @@ Alternatively, any supported Charset can be used.
 
 ### Collection Serializers
 
-There are immutable (Guava) and mutable collection serializers. It is recomended to use immutable collections.
+There are immutable (Guava) collection serializers. It is recomended to use immutable collections.
 
 All Collection Serializers require an item Serializer (to serialize the individual items of the collection)
 
 * ImmutableListSerialzer(itemSerializer)
 * ImmutableSetSerialzer(itemSerializer)
-* ArrayListSerialzer(itemSerializer) perferably use ImmutableList instead
-* LinkedListSerialzer(itemSerializer) perferabley uese ImmutableList instead
-* HashSetSerializer(itemSerializer) perferably use ImmutableSet instead
 
 If you require other collection serializers, extend ImmutableCollectionSerializer or MutableCollectionSerializer accordlingly.
 
@@ -136,8 +133,8 @@ public class PermaConfig {
     }
 
     @Bean
-    public WritablePerMa<String, StoreType> storeTypePerma(File permaDir) throws IOException {
-        return WritablePerMa.loadOrCreate(permaDir, "storetype",
+    public WritablePerma<String, StoreType> storeTypePerma(File permaDir) throws IOException {
+        return WritablePerma.loadOrCreate(permaDir, "storetype",
                                             KeyOrValueSerializer.STRING,
                                             new EnumSerializer<>(StoreType.class));
     }

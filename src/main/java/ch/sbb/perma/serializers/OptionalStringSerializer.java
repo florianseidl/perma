@@ -11,7 +11,7 @@ import java.util.Optional;
  * A serializer for nullable strings.
  * <p>
  *     Uses optional as null is not allowed in ImmutableMap and ConcurrentMap.
- *     The persisted for of an empty optional is null as the binary PerMa record format supports null keys and values.
+ *     The persisted for of an empty optional is null as the binary Perma record format supports null keys and values.
  * </p>
  *
  * @author u206123 (Florian Seidl)

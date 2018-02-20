@@ -24,32 +24,32 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritablePerMa<K,V> extends ForwardingConcurrentMap<K,V> implements Writable {
-    private final static Logger LOG = LoggerFactory.getLogger(WritablePerMa.class);
+public class WritablePerma<K,V> extends ForwardingConcurrentMap<K,V> implements WritableMap<K,V> {
+    private final static Logger LOG = LoggerFactory.getLogger(WritablePerma.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();
     private final ConcurrentMap<K,V> map;
 
     private MapSnapshot<K,V> lastPersisted;
 
-    private WritablePerMa(MapSnapshot<K,V> lastPersisted) {
+    private WritablePerma(MapSnapshot<K,V> lastPersisted) {
         this.lastPersisted = lastPersisted;
         this.map = new ConcurrentHashMap<>(lastPersisted.asImmutableMap());
     }
 
-    public static WritablePerMa<String, String> loadOrCreateStringMap(File dir, String name) throws IOException {
+    public static WritablePerma<String, String> loadOrCreateStringMap(File dir, String name) throws IOException {
         return loadOrCreate(dir,
                             name,
                             KeyOrValueSerializer.STRING,
                             KeyOrValueSerializer.STRING);
     }
 
-    public static <K,V> WritablePerMa<K,V> loadOrCreate(File dir,
-                                                   String name,
-                                                   KeyOrValueSerializer<K> keySerializer,
-                                                   KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        LOG.info("Loading writabe PerMa {} from directory {}", name, dir);
-        return new WritablePerMa<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
+    public static <K,V> WritablePerma<K,V> loadOrCreate(File dir,
+                                                        String name,
+                                                        KeyOrValueSerializer<K> keySerializer,
+                                                        KeyOrValueSerializer<V> valueSerializer) throws IOException {
+        LOG.info("Loading writabe Perma {} from directory {}", name, dir);
+        return new WritablePerma<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
     }
 
     public void persist() throws IOException {

@@ -15,7 +15,6 @@ package ch.sbb.perma.serializers;
  */
 public interface KeyOrValueSerializer<T> {
     StringSerializer STRING = new StringSerializer();
-    ShortStringSerializer SHORT_STRING = new ShortStringSerializer();
     IntegerSerializer INTEGER = new IntegerSerializer();
     LongSerializer LONG = new LongSerializer();
     ByteSerializer BYTE = new ByteSerializer();
@@ -24,7 +23,6 @@ public interface KeyOrValueSerializer<T> {
     FloatSerializer FLOAT = new FloatSerializer();
     BigDecimalSerializer BIG_DECIMAL = new BigDecimalSerializer();
     BigIntegerSerializer BIG_INTEGER = new BigIntegerSerializer();
-    CharSerializer CHAR = new CharSerializer();
     CharacterSerializer CHARACTER = new CharacterSerializer();
     JavaObjectSerializer JAVA_OBJECT = new JavaObjectSerializer();
     OptionalStringSerializer OPTIONAL_STRING = new OptionalStringSerializer();
