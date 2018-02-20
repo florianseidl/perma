@@ -30,15 +30,15 @@ import static ch.sbb.perma.serializers.NullValueSerializer.NULL_OBJECT;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writable {
-    private final static Logger LOG = LoggerFactory.getLogger(WritablePerMaSet.class);
+public class WritablePermaSet<T> extends ForwardingSet<T> implements WritableSet<T> {
+    private final static Logger LOG = LoggerFactory.getLogger(WritablePermaSet.class);
 
     private final ReentrantLock persistLock = new ReentrantLock();
     private final Set<T> set;
 
     private MapSnapshot<T, Object> lastPersisted;
 
-    private WritablePerMaSet(MapSnapshot<T, Object> lastPersisted) {
+    private WritablePermaSet(MapSnapshot<T, Object> lastPersisted) {
         this.lastPersisted = lastPersisted;
         this.set = toMutableSet(lastPersisted.asImmutableMap().keySet());
     }
@@ -49,20 +49,20 @@ public class WritablePerMaSet<T> extends ForwardingSet<T> implements Writable {
         return set;
     }
 
-    public static WritablePerMaSet<String> loadOrCreateStringSet(File dir, String name) throws IOException {
-        return WritablePerMaSet.loadOrCreate(dir,
+    public static WritablePermaSet<String> loadOrCreateStringSet(File dir, String name) throws IOException {
+        return WritablePermaSet.loadOrCreate(dir,
                                             name,
                                             KeyOrValueSerializer.STRING);
     }
 
-    public static <T> WritablePerMaSet<T> loadOrCreate(File dir,
-                                                    String name,
-                                                    KeyOrValueSerializer<T> serializer) throws IOException {
-        LOG.info("Loading writabe PerMaSet {} from directory {}", name, dir);
+    public static <T> WritablePermaSet<T> loadOrCreate(File dir,
+                                                       String name,
+                                                       KeyOrValueSerializer<T> serializer) throws IOException {
+        LOG.info("Loading writabe PermaSet {} from directory {}", name, dir);
         Stopwatch stopwatch = Stopwatch.createStarted();
-        WritablePerMaSet<T> permaSet = new WritablePerMaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
+        WritablePermaSet<T> permaSet = new WritablePermaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
         stopwatch.stop();
-        LOG.debug("Writable PerMaSet {} loaded or created successfully in {} ms", name, stopwatch.elapsed().toMillis());
+        LOG.debug("Writable PermaSet {} loaded or created successfully in {} ms", name, stopwatch.elapsed().toMillis());
         return permaSet;
     }
 
