@@ -14,7 +14,7 @@ package ch.sbb.perma.datastore;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class HeaderMismatchException extends PerMaDatastoreException {
+public class HeaderMismatchException extends PermaDatastoreException {
     public HeaderMismatchException(String s) {
         super(s);
     }

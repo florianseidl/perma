@@ -8,7 +8,7 @@
 
 	<groupId>ch.sbb.perma</groupId>
 	<artifactId>perma</artifactId>
-	<version>5.2</version>
+	<version>6.0</version>
 
 	<description>A very simple embedded map database with a focus on stability in a cloud environment</description>
 
@@ -25,7 +25,7 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>23.0</version>
+			<version>24.0-jre</version>
 		</dependency>
 
 		<dependency>

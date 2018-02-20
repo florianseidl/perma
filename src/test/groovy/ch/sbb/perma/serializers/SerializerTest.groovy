@@ -71,7 +71,7 @@ class SerializerTest extends Specification {
         new PairSerializer(new StringSerializer(),
                 new IntegerSerializer())                            | new Pair('foo', null)
         new PairSerializer(new StringSerializer(),
-                new StringSerializer())                            | new Pair('', '')
+                new StringSerializer())                             | new Pair('', '')
         new TripletSerializer(new StringSerializer(),
                 new IntegerSerializer(),
                 new LongSerializer())                               | new Triplet('foo', 42, 111L)
@@ -92,17 +92,6 @@ class SerializerTest extends Specification {
         new DateSerializer()                                        | new Date(Long.MAX_VALUE)
         new DateSerializer()                                        | new Date(0)
         new EnumSerializer(DayOfWeek.class)                         | DayOfWeek.FRIDAY
-        new ArrayListSerializer(new StringSerializer())             | new ArrayList<String>(['a', 'b', 'c'])
-        new ArrayListSerializer(new StringSerializer())             | new ArrayList<String>()
-        new HashSetSerializer(new IntegerSerializer())              | new HashSet<Integer>([1, 2, 3])
-        new HashSetSerializer(new IntegerSerializer())              | new HashSet<Integer>()
-        new LinkedListSerializer(new StringSerializer())            | new LinkedList<String>(['a', 'b', 'c'])
-        new LinkedListSerializer(new StringSerializer())            | new LinkedList<String>()
-        new CharSerializer()                                        | 'a' as Character
-        new CharSerializer()                                        | ' ' as Character
-        new CharSerializer()                                        | 'Ü' as Character
-        new ShortStringSerializer()                                 | 'bli bla blo'
-        new ShortStringSerializer()                                 | ''
     }
 
     @Unroll

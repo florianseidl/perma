@@ -25,27 +25,27 @@ import static ch.sbb.perma.serializers.NullValueSerializer.NULL;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class ReadOnlyPerMaSet<T> extends ForwardingSet<T> implements Refreshable {
-    private final static Logger LOG = LoggerFactory.getLogger(ReadOnlyPerMaSet.class);
+public class ReadOnlyPermaSet<T> extends ForwardingSet<T> implements RefreshableSet<T> {
+    private final static Logger LOG = LoggerFactory.getLogger(ReadOnlyPermaSet.class);
 
     private MapSnapshot<T,Object> lastLoaded;
     private final ReentrantLock loadLock = new ReentrantLock();
 
-    private ReadOnlyPerMaSet(MapSnapshot<T,Object> loaded) {
+    private ReadOnlyPermaSet(MapSnapshot<T,Object> loaded) {
         this.lastLoaded = loaded;
     }
 
-    public static ReadOnlyPerMaSet<String> loadStringSet(File dir, String name) throws IOException {
+    public static ReadOnlyPermaSet<String> loadStringSet(File dir, String name) throws IOException {
         return load(dir,
                     name,
                     KeyOrValueSerializer.STRING);
     }
 
-    public static <T> ReadOnlyPerMaSet<T> load(File dir,
-                                              String name,
-                                              KeyOrValueSerializer<T> serializer) throws IOException {
-        LOG.info("Loading readonly PerMaSet {} from directory {}", name, dir);
-        return new ReadOnlyPerMaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
+    public static <T> ReadOnlyPermaSet<T> load(File dir,
+                                               String name,
+                                               KeyOrValueSerializer<T> serializer) throws IOException {
+        LOG.info("Loading readonly PermaSet {} from directory {}", name, dir);
+        return new ReadOnlyPermaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
     }
 
     public void refresh() throws IOException {

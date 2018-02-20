@@ -10,8 +10,8 @@ package ch.sbb.perma.datastore;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-public class PerMaDatastoreException extends RuntimeException {
-    public PerMaDatastoreException(String s) {
+public class PermaDatastoreException extends RuntimeException {
+    public PermaDatastoreException(String s) {
         super(s);
     }
 }
