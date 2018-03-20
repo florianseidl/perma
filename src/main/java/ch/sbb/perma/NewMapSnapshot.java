@@ -50,14 +50,16 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
             return this;
         }
         FileGroup newFullFileGroup = files.withNextFull();
+        LOG.debug("Writing full file with mapSize={} to file {} after deleting stale temp files",
+                currentImmutable.size(),
+                newFullFileGroup.fullFile());
+        newFullFileGroup.deleteStaleTempFiles();
         MapFileData<K,V> fullData = MapFileData
                                 .createNewFull(name, currentImmutable)
                                 .writeTo(newFullFileGroup.fullFile(),
-                                         keySerializer,
-                                         valueSerializer);
-        LOG.debug("Writing full file with mapSize={} to file {}",
-                    currentImmutable.size(),
-                    newFullFileGroup.fullFile());
+                                        newFullFileGroup.createTempFile(),
+                                        keySerializer,
+                                        valueSerializer);
         return new PersistedMapSnapshot<>(
                 name,
                 newFullFileGroup,

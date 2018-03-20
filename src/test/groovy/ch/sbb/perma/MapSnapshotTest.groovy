@@ -337,4 +337,42 @@ class MapSnapshotTest extends Specification {
         STRING         | null
         null           | STRING
     }
+
+    def "delete tempfile on writeNext NewMapSnapshot"() {
+        given:
+        def newSnapshot = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+        def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
+        oldTemp.write('irgendwas')
+
+        when:
+        newSnapshot.writeNext(['A':VALUE_A] )
+
+        then:
+        FileGroup.list(tempDir, 'foo').exists()
+        !oldTemp.exists()
+    }
+
+    def "delete tempfile on writeNext PersistedMapSnapshot"() {
+        given:
+        def newSnapshot = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                STRING,
+                STRING)
+        def persistedSnapshot = newSnapshot.writeNext(['A':VALUE_A] )
+        def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
+        oldTemp.write('irgendwas')
+
+        when:
+        persistedSnapshot.writeNext(['A':VALUE_A, 'B': VALUE_B] )
+
+        then:
+        FileGroup.list(tempDir, 'foo').exists()
+        !oldTemp.exists()
+    }
+
 }
