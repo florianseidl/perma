@@ -15,11 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -92,12 +88,14 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
             LOG.debug("More than a third of the records are added and/or deleted, compacting to full file");
             return compactTo(currentImmutable);
         }
+        LOG.debug("Writing delta to file {} after deleting stale temp files", filesWithNextDeltaFile.latestDeltaFile());
+        filesWithNextDeltaFile.deleteStaleTempFiles();
         MapFileData<K,V> nextDeltaData = toDelta(diff).writeTo(
                                                 filesWithNextDeltaFile.latestDeltaFile(),
+                                                filesWithNextDeltaFile.createTempFile(),
                                                 keySerializer,
                                                 valueSerializer);
-        LOG.debug("Writing delta to file {}", filesWithNextDeltaFile.latestDeltaFile());
-        return new PersistedMapSnapshot<K,V>(
+        return new PersistedMapSnapshot<>(
                                 name,
                                 filesWithNextDeltaFile,
                                 currentImmutable,

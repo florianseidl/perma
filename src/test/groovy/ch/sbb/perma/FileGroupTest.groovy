@@ -7,7 +7,7 @@ package ch.sbb.perma
 import spock.lang.Specification
 import spock.lang.Unroll
 
-class DirectoryTest extends Specification {
+class FileGroupTest extends Specification {
     File tempDir
 
     def setup() {
@@ -225,6 +225,32 @@ class DirectoryTest extends Specification {
         []                                 | []                                 || true
     }
 
+
+    def "create temp file"() {
+        when:
+        def tempFile = FileGroup
+                .list(tempDir, 'foo' )
+                .createTempFile()
+
+        then:
+        tempFile.getName().startsWith('foo')
+        tempFile.getName().endsWith('perma.temp')
+    }
+
+
+    def "delete old temp file"() {
+        given:
+        def fileGroup = FileGroup
+                .list(tempDir, 'foo' )
+        def staleTempFile = fileGroup.createTempFile()
+        staleTempFile.write('irgendwas bli bla blo')
+
+        when:
+        fileGroup.deleteStaleTempFiles()
+
+        then:
+        !staleTempFile.exists()
+    }
 
     def toStringIsImplemented() {
         when:
