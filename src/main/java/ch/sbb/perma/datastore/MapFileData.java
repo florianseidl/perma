@@ -10,17 +10,9 @@ import ch.sbb.perma.serializers.NullValueSerializer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * The binary representation of a map or a delta to a map.
@@ -29,8 +21,6 @@ import java.util.UUID;
  * @since 1.0, 2017.
  */
 public class MapFileData<K,V> {
-    private final static String TEMP_FILE_FORMAT = "%s.temp";
-
     private final Header header;
     private final ImmutableMap<K,V> newAndUpdated;
     private final ImmutableSet<K> deleted;
@@ -42,7 +32,7 @@ public class MapFileData<K,V> {
     }
 
     public static <K,V> MapFileData<K,V> createNewFull(String name, ImmutableMap<K,V> current) {
-        return new MapFileData<K,V>(Header.newFullHeader(name, current.size()), current, ImmutableSet.of());
+        return new MapFileData<>(Header.newFullHeader(name, current.size()), current, ImmutableSet.of());
     }
 
     public static <K,V> MapFileData<K,V> readFileGroupAndCollect(File fullFile,
@@ -123,9 +113,8 @@ public class MapFileData<K,V> {
     }
 
     public MapFileData<K,V> writeTo(File file,
-                                    KeyOrValueSerializer<K> keySerializer,
+                                    File tempFile, KeyOrValueSerializer<K> keySerializer,
                                     KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        File tempFile = createTempFileFor(file);
         MapFileData<K,V> mapFileData = writeToTempFile(tempFile, keySerializer, valueSerializer);
         if(!tempFile.renameTo(file)) {
             throw new FileRenameException(String.format("Could not rename temporary file %s to perma set file %s",
@@ -141,10 +130,6 @@ public class MapFileData<K,V> {
         try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tempFile))) {
             return writeTo(out, keySerializer, valueSerializer);
         }
-    }
-
-    private File createTempFileFor(File targetFile) {
-        return new File(targetFile.getParent(), String.format(TEMP_FILE_FORMAT, UUID.randomUUID()));
     }
 
     MapFileData<K,V> writeTo(OutputStream output,

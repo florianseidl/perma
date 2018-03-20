@@ -9,11 +9,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,7 +25,7 @@ class FileGroup {
     private static class FilePattern {
         private final Pattern pattern;
 
-        public FilePattern(String template, Object... params) {
+        FilePattern(String template, Object... params) {
             this.pattern = Pattern.compile(String.format(template, params));
         }
 
@@ -44,18 +40,16 @@ class FileGroup {
             return Integer.parseInt(matcher.group(1));
         }
 
-
         String[] listFileNames(File dir) {
-            return dir.list(
-                    (file, s) -> pattern.matcher(s).matches()
-            );
+            return listDir(dir, pattern);
         }
-
     }
 
     private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma";
     private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma";
     private final static String FILE_FORMAT = "%s_%d_%d.perma";
+    private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
+    private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
 
     private final File dir;
     private final String name;
@@ -79,7 +73,7 @@ class FileGroup {
                 .orElse(new FileGroup(dir, name, null, ImmutableList.of()));
     }
 
-    FileGroup refresh() throws FileNotFoundException {
+    FileGroup refresh() {
         return list(dir, name);
     }
 
@@ -166,6 +160,16 @@ class FileGroup {
         return deleted;
     }
 
+    File createTempFile() {
+        return new File(dir, String.format(TEMP_FILE_FORMAT, name, UUID.randomUUID()));
+    }
+
+    void deleteStaleTempFiles() {
+        Pattern tempFilePattern = Pattern.compile(String.format(TEMP_FILE_PATTERN_TEMPLATE, name));
+        Arrays.stream(listDir(dir, tempFilePattern))
+                .forEach(filename -> new File(dir, filename).delete());
+    }
+
     private File toFile(String fileName) {
         return new File(dir, fileName);
     }
@@ -191,6 +195,13 @@ class FileGroup {
     private static FilePattern deltaFilePattern(String name, String fullFileName) {
         int fullFileNumber = fullFilePattern(name).parseFileNumber(fullFileName);
         return new FilePattern(String.format(DELTA_FILE_NAME_PATTERN_TEMPLATE, name, fullFileNumber));
+    }
+
+    private static String[] listDir(File dir, Pattern pattern) {
+        String[] list = dir.list(
+                (file, s) -> pattern.matcher(s).matches()
+        );
+        return list != null ? list : new String[] {};
     }
 
     @Override
