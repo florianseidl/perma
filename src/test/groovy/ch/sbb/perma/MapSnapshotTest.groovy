@@ -446,8 +446,8 @@ class MapSnapshotTest extends Specification {
 
 
         where:
-        map                                     | options                                      | compression
-        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.defaults()                           | NoCompression.class
-        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | new Options.Builder().compress(true).build() | GZipCompression.class
+        map                                     | options              | compression
+        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.defaults()   | NoCompression.class
+        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.compressed() | GZipCompression.class
     }
 }

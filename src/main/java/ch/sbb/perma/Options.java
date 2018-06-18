@@ -8,10 +8,22 @@ import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
 
+/**
+ * API to configure optional features in perma.
+ * <ul>
+ *     <li>Compress: Switch on or off GZip compression of files. Default is off (false)</li>
+ * </ul>
+ *
+ * @author u206123 (Florian Seidl)
+ * @since 6.2, 2018.
+ */
 public class Options {
     public static class Builder {
         private boolean compress = false;
         private int compactThresholdPercent = 33;
+
+        private Builder() {
+        }
 
         public Builder compress(boolean compress) {
             this.compress = compress;
@@ -36,6 +48,14 @@ public class Options {
     private Options(boolean compress, int compactThresholdPercent) {
         this.compress = compress;
         this.compactThresholdPercent = compactThresholdPercent;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Options compressed() {
+        return new Builder().compress(true).build();
     }
 
     public static Options defaults() {

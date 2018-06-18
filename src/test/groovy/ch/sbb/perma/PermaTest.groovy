@@ -57,7 +57,7 @@ class PermaTest extends Specification {
         [999999999999L:Long.MAX_VALUE]                   | LONG          | LONG            | Options.defaults()
         ['foo' : new Date(0)]                            | STRING        | JAVA_OBJECT     | Options.defaults()
         [(LocalDate.MAX) : LocalDate.MIN]                | JAVA_OBJECT   | JAVA_OBJECT     | Options.defaults()
-        ['foo':FOO]                                      | STRING        | STRING          | new Options.Builder().compress(true).build()
+        ['foo':FOO]                                      | STRING        | STRING          | Options.compressed()
     }
 
     @Unroll
