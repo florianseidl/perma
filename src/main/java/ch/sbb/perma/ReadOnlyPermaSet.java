@@ -45,7 +45,7 @@ public class ReadOnlyPermaSet<T> extends ForwardingSet<T> implements Refreshable
                                                String name,
                                                KeyOrValueSerializer<T> serializer) throws IOException {
         LOG.info("Loading readonly PermaSet {} from directory {}", name, dir);
-        return new ReadOnlyPermaSet<T>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
+        return new ReadOnlyPermaSet<T>(MapSnapshot.loadOrCreate(dir, name, Options.illegal(), serializer, NULL));
     }
 
     public void refresh() throws IOException {

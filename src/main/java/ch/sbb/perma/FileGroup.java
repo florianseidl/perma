@@ -4,6 +4,9 @@
 
 package ch.sbb.perma;
 
+import ch.sbb.perma.datastore.Compression;
+import ch.sbb.perma.datastore.GZipCompression;
+import ch.sbb.perma.datastore.NoCompression;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -45,10 +48,12 @@ class FileGroup {
         }
     }
 
-    private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma";
-    private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma";
     private final static String FILE_FORMAT = "%s_%d_%d.perma";
+    private final static String FILE_FORMAT_GZIP = FILE_FORMAT + ".gzip";
     private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
+    private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma(\\.gzip)?";
+    private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma(\\.gzip)?";
+    private final static Pattern GZIP_FILE_NAME_PATTERN = Pattern.compile(".*\\.perma\\.gzip");
     private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
 
     private final File dir;
@@ -124,7 +129,7 @@ class FileGroup {
                 deltaFileNames.size());
     }
 
-    FileGroup withNextFull() {
+    FileGroup withNextFull(Compression compression) {
         int latestFullFileNumber = fullFileName != null ?
                         fullFilePattern(name).parseFileNumber(fullFileName) : 0;
         return new FileGroup(
@@ -144,8 +149,14 @@ class FileGroup {
                                 fullFileName,
                                 ImmutableList.<String>builder()
                                             .addAll(deltaFileNames)
-                                            .add(String.format(FILE_FORMAT, name, latestFullFileNumber, latestDeltaFileNumber + 1))
+                                            .add(String.format(fileFormat(), name, latestFullFileNumber, latestDeltaFileNumber + 1))
                                             .build());
+    }
+
+    private String fileFormat() {
+        return GZIP_FILE_NAME_PATTERN.matcher(fullFileName).matches() ?
+                FILE_FORMAT_GZIP :
+                FILE_FORMAT;
     }
 
     boolean delete() throws IOException {
@@ -170,6 +181,17 @@ class FileGroup {
                 .forEach(filename -> new File(dir, filename).delete());
     }
 
+    Compression compression() throws FileNotFoundException {
+        if(fullFileName == null) {
+            throw new FileNotFoundException(
+                    String.format("Can not determine compression, no file for perma %s found in %s", name, dir));
+        }
+        if(GZIP_FILE_NAME_PATTERN.matcher(fullFileName).matches()) {
+            return new GZipCompression();
+        }
+        return new NoCompression();
+    }
+
     private File toFile(String fileName) {
         return new File(dir, fileName);
     }
@@ -183,9 +205,9 @@ class FileGroup {
 
     private static Optional<String> latestFullFileName(File dir, String name) {
         FilePattern fullFilePattern = fullFilePattern(name);
-        return Arrays.stream(fullFilePattern.listFileNames(dir))
-                .sorted(Comparator.comparingInt(fullFilePattern::parseFileNumber).reversed())
-                .findFirst();
+        return Arrays
+                .stream(fullFilePattern.listFileNames(dir))
+                .max(Comparator.comparingInt(fullFilePattern::parseFileNumber));
     }
 
     private static FilePattern fullFilePattern(String name) {

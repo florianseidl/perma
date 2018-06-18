@@ -30,6 +30,7 @@ class MapSnapshotTest extends Specification {
         def snapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -43,6 +44,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 keySerializer,
                 valueSerializer)
 
@@ -69,6 +71,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 keySerializer,
                 valueSerializer)
 
@@ -95,6 +98,7 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -118,7 +122,11 @@ class MapSnapshotTest extends Specification {
     def "next from persisted snapshot delelete intermediate snapshot"() {
         given:
         def newSnapshot = new NewMapSnapshot(
-                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         when:
         newSnapshot.writeNext(['A':VALUE_A])
@@ -130,7 +138,12 @@ class MapSnapshotTest extends Specification {
         firstDelta.delete()
         secondDelta.renameTo(firstDelta)
 
-        PersistedMapSnapshot.load('foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+        PersistedMapSnapshot.load(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -139,9 +152,17 @@ class MapSnapshotTest extends Specification {
     def "snapshot file from different full file"() {
         given:
         def newSnapshotFoo = new NewMapSnapshot(
-                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
         def newSnapshotBar = new NewMapSnapshot(
-                'bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
+                'bar',
+                FileGroup.list(tempDir, 'bar'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         when:
         newSnapshotFoo.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C])
@@ -152,7 +173,12 @@ class MapSnapshotTest extends Specification {
         lastBarDelta.delete()
         firstFooDelta.renameTo(lastBarDelta)
 
-        PersistedMapSnapshot.load('bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
+        PersistedMapSnapshot.load(
+                'bar',
+                FileGroup.list(tempDir, 'bar'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -161,7 +187,11 @@ class MapSnapshotTest extends Specification {
     def "not a full file"() {
         given:
         def newSnapshot = new NewMapSnapshot(
-                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         when:
         newSnapshot.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A, 'B':VALUE_B])
@@ -171,7 +201,12 @@ class MapSnapshotTest extends Specification {
         files.fullFile().delete()
         firstDelta.renameTo(files.fullFile())
 
-        PersistedMapSnapshot.load('foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+        PersistedMapSnapshot.load(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -182,7 +217,12 @@ class MapSnapshotTest extends Specification {
         def files = FileGroup.list(tempDir, 'foo')
 
         when:
-        PersistedMapSnapshot.load('foo', files, STRING, STRING)
+        PersistedMapSnapshot.load(
+                'foo',
+                files,
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown FileNotFoundException
@@ -194,6 +234,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -220,6 +261,7 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -250,6 +292,7 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -268,6 +311,7 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -291,6 +335,7 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -326,6 +371,7 @@ class MapSnapshotTest extends Specification {
         MapSnapshot.loadOrCreate(
                 tempDir,
                 'foo',
+                Options.defaults(),
                 keySerializer,
                 valueSerialzer)
 
@@ -343,6 +389,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
         def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
@@ -361,6 +408,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
         def persistedSnapshot = newSnapshot.writeNext(['A':VALUE_A] )

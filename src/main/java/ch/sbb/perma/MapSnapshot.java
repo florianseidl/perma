@@ -20,6 +20,7 @@ import java.util.Map;
 interface MapSnapshot<K, V> {
     static <K, V> MapSnapshot<K,V> loadOrCreate(File dir,
                                            String name,
+                                           Options options,
                                            KeyOrValueSerializer<K> keySerializer,
                                            KeyOrValueSerializer<V> valueSerializer) throws IOException {
         if(keySerializer == null || valueSerializer == null) {
@@ -30,12 +31,14 @@ interface MapSnapshot<K, V> {
             return new NewMapSnapshot<K, V>(
                     name,
                     files,
+                    options,
                     keySerializer,
                     valueSerializer);
         }
         return PersistedMapSnapshot.load(
                 name,
                 files,
+                options,
                 keySerializer,
                 valueSerializer);
     }

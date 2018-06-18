@@ -27,14 +27,15 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
 
     private final String name;
     private final FileGroup files;
+    private final Options options;
     private final KeyOrValueSerializer<K> keySerializer;
     private final KeyOrValueSerializer<V> valueSerializer;
 
-
-    NewMapSnapshot(String name, FileGroup directory, KeyOrValueSerializer<K> keySerializer, KeyOrValueSerializer<V> valueSerializer) {
+    NewMapSnapshot(String name, FileGroup directory, Options options, KeyOrValueSerializer<K> keySerializer, KeyOrValueSerializer<V> valueSerializer) {
         LOG.debug("Creating new Snapshot");
         this.name = name;
         this.files = directory;
+        this.options = options;
         this.keySerializer = keySerializer;
         this.valueSerializer = valueSerializer;
     }
@@ -44,18 +45,18 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
         return writeNext(ImmutableMap.copyOf(current));
     }
 
-    public MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable)  throws IOException{
+    private MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable)  throws IOException{
         if(currentImmutable.isEmpty() && !files.exists()) {
             LOG.debug("Noting to write (map is not yet peristed and still empty), ignoring");
             return this;
         }
-        FileGroup newFullFileGroup = files.withNextFull();
+        FileGroup newFullFileGroup = files.withNextFull(options.compression());
         LOG.debug("Writing full file with mapSize={} to file {} after deleting stale temp files",
                 currentImmutable.size(),
                 newFullFileGroup.fullFile());
         newFullFileGroup.deleteStaleTempFiles();
         MapFileData<K,V> fullData = MapFileData
-                                .createNewFull(name, currentImmutable)
+                                .createNewFull(name, options.compression(), currentImmutable)
                                 .writeTo(newFullFileGroup.fullFile(),
                                         newFullFileGroup.createTempFile(),
                                         keySerializer,
@@ -63,6 +64,7 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
         return new PersistedMapSnapshot<>(
                 name,
                 newFullFileGroup,
+                options,
                 currentImmutable,
                 fullData,
                 keySerializer,
@@ -76,7 +78,7 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
             LOG.debug("No file found, cancelling refresh");
             return this;
         }
-        return PersistedMapSnapshot.load(name, refreshedFiles, keySerializer, valueSerializer);
+        return PersistedMapSnapshot.load(name, refreshedFiles, options, keySerializer, valueSerializer);
     }
 
     @Override

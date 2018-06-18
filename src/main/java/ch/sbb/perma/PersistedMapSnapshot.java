@@ -32,6 +32,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
 
     private final String name;
     private final FileGroup files;
+    private final Options options;
     private final ImmutableMap<K,V> mapSnapshot;
     private final MapFileData<K,V> persited;
     private final KeyOrValueSerializer<K> keySerializer;
@@ -39,12 +40,14 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
 
     PersistedMapSnapshot(String name,
                          FileGroup files,
+                         Options options,
                          ImmutableMap<K, V> mapSnapshot,
                          MapFileData<K,V> persited,
                          KeyOrValueSerializer<K> keySerializer,
                          KeyOrValueSerializer<V> valueSerializer) {
         this.name = name;
         this.files = files;
+        this.options = options;
         this.mapSnapshot = mapSnapshot;
         this.persited = persited;
         this.keySerializer = keySerializer;
@@ -53,6 +56,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
 
     static <K,V> MapSnapshot<K,V> load(String name,
                                        FileGroup latestFiles,
+                                       Options options,
                                        KeyOrValueSerializer<K> keySerializer,
                                        KeyOrValueSerializer<V> valueSerializer) throws IOException{
         LOG.debug("Loading persisted Snapshot from files latestFiles {}", latestFiles);
@@ -62,10 +66,12 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                 latestFiles.deltaFiles(),
                 keySerializer,
                 valueSerializer,
+                latestFiles.compression(),
                 collector);
         return new PersistedMapSnapshot<>(
                 name,
                 latestFiles,
+                options,
                 ImmutableMap.copyOf(collector),
                 latestData,
                 keySerializer,
@@ -77,7 +83,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
         return writeNext(ImmutableMap.copyOf(current));
     }
 
-    public MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable) throws IOException {
+    private MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable) throws IOException {
         FileGroup filesWithNextDeltaFile = files.withNextDelta();
         MapDifference<K,V> diff = Maps.difference(mapSnapshot, currentImmutable);
         if(diff.areEqual()) {
@@ -98,6 +104,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
         return new PersistedMapSnapshot<>(
                                 name,
                                 filesWithNextDeltaFile,
+                                options,
                                 currentImmutable,
                                 nextDeltaData,
                                 keySerializer,
@@ -114,7 +121,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
         FileGroup refreshedFiles = files.refresh();
         if(!refreshedFiles.hasSameFullFileAs(files)) { // there was a compact, reload
             LOG.debug("Reloading instead of refresh, full file has changed");
-            return load(name, refreshedFiles, keySerializer, valueSerializer);
+            return load(name, refreshedFiles, options, keySerializer, valueSerializer);
         }
         List<File> additionalDeltaFiles = refreshedFiles.deltaFilesSince(files);
         if(additionalDeltaFiles.isEmpty()) {
@@ -131,6 +138,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
         return new PersistedMapSnapshot<>(
                                 name,
                                 refreshedFiles,
+                                options,
                                 ImmutableMap.copyOf(collector),
                                 lastData,
                                 keySerializer,
@@ -144,7 +152,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
 
     private MapSnapshot<K, V> compactTo(ImmutableMap<K,V> nextMapSnapshot) throws IOException {
         LOG.debug("Compacting map snapshot files {}", files);
-        MapSnapshot<K,V> compactedSnapshot = new NewMapSnapshot<>(name, files, keySerializer, valueSerializer)
+        MapSnapshot<K,V> compactedSnapshot = new NewMapSnapshot<>(name, files, options, keySerializer, valueSerializer)
                 .writeNext(nextMapSnapshot);
         LOG.debug("Deleting files {}", files);
         files.delete();
