@@ -147,7 +147,7 @@ public class MapFileData<K,V> {
     private MapFileData<K,V> writeToTempFile(File tempFile,
                                              KeyOrValueSerializer<K> keySerializer,
                                              KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        try (BufferedOutputStream out = new BufferedOutputStream(compression.compress(new FileOutputStream(tempFile)))) {
+        try (OutputStream out = new FileOutputStream(tempFile)) {
             return writeTo(out, keySerializer, valueSerializer);
         }
     }
@@ -155,7 +155,7 @@ public class MapFileData<K,V> {
     MapFileData<K,V> writeTo(OutputStream output,
                              KeyOrValueSerializer<K> keySerializer,
                              KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        try (OutputStream out = new BufferedOutputStream(output)) {
+        try (OutputStream out = new BufferedOutputStream(compression.compress(output))) {
             header.writeTo(out);
             for(Map.Entry<K,V> entry : newAndUpdated.entrySet()) {
                 MapEntryRecord

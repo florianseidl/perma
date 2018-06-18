@@ -4,7 +4,10 @@
 
 package ch.sbb.perma
 
+import ch.sbb.perma.datastore.GZipCompression
 import ch.sbb.perma.datastore.HeaderMismatchException
+import ch.sbb.perma.datastore.NoCompression
+import ch.sbb.perma.serializers.KeyOrValueSerializer
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -63,7 +66,6 @@ class MapSnapshotTest extends Specification {
         [666:42]                                | INTEGER        | INTEGER
         [99999L : Long.MIN_VALUE]               | LONG           | LONG
     }
-
 
     @Unroll
     def "next from persisted snapshot #map.keySet()"() {
@@ -423,4 +425,29 @@ class MapSnapshotTest extends Specification {
         !oldTemp.exists()
     }
 
+    @Unroll
+    def "next from new snapshot #map.keySet() options #options"() {
+        given:
+        def newSnapshot = new NewMapSnapshot(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                options,
+                KeyOrValueSerializer.STRING,
+                KeyOrValueSerializer.STRING)
+
+        when:
+        def next = newSnapshot.writeNext(map)
+        def fileGroup = FileGroup.list(tempDir, 'foo')
+
+        then:
+        next.asImmutableMap().equals(map)
+        fileGroup.exists()
+        fileGroup.compression().class == compression
+
+
+        where:
+        map                                     | options                                      | compression
+        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.defaults()                           | NoCompression.class
+        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | new Options.Builder().compress(true).build() | GZipCompression.class
+    }
 }

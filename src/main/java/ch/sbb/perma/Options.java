@@ -13,6 +13,16 @@ public class Options {
         private boolean compress = false;
         private int compactThresholdPercent = 33;
 
+        public Builder compress(boolean compress) {
+            this.compress = compress;
+            return this;
+        }
+
+        public Builder compactThresholdPercent(int compactThresholdPercent) {
+            this.compactThresholdPercent = compactThresholdPercent;
+            return this;
+        }
+
         public Options build() {
             if(compactThresholdPercent < 0 || compactThresholdPercent > 100) {
                 throw new IllegalArgumentException(String.format("Invalid percent value for compactThresholdPercent: %d", compactThresholdPercent));

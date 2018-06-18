@@ -35,28 +35,29 @@ class PermaTest extends Specification {
     }
 
     @Unroll
-    def "write read #map.keySet()"() {
+    def "write read #map.keySet() options #options"() {
         given:
-        def perma = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        def perma = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer, options)
 
         when:
         perma.putAll(map)
         perma.persist()
-        def permaReread = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer)
+        def permaReread = WritablePerma.loadOrCreate(tempDir, "testmap", keySerializer, valueSerializer, options)
 
         then:
         permaReread.equals(map)
 
         where:
-        map                                               | keySerializer | valueSerializer
-        ['foo':FOO]                                       | STRING        | STRING
-        ['fooo':FOO, 'N I X':NIX]                         | STRING        | STRING
-        [:]                                               | STRING        | STRING
-        ['foo':FOO, 'N I X':NIX, 'long store':LONG_STRING] | STRING        | STRING
-        [7:42, 9999:66666]                                | INTEGER       | INTEGER
-        [999999999999L:Long.MAX_VALUE]                    | LONG          | LONG
-        ['foo' : new Date(0)]                             | STRING        | JAVA_OBJECT
-        [(LocalDate.MAX) : LocalDate.MIN]                 | JAVA_OBJECT   | JAVA_OBJECT
+        map                                              | keySerializer | valueSerializer | options
+        ['foo':FOO]                                      | STRING        | STRING          | Options.defaults()
+        ['fooo':FOO,'N I X':NIX]                         | STRING        | STRING          | Options.defaults()
+        [:]                                              | STRING        | STRING          | Options.defaults()
+        ['foo':FOO,'N I X':NIX,'long store':LONG_STRING] | STRING        | STRING          | Options.defaults()
+        [7:42, 9999:66666]                               | INTEGER       | INTEGER         | Options.defaults()
+        [999999999999L:Long.MAX_VALUE]                   | LONG          | LONG            | Options.defaults()
+        ['foo' : new Date(0)]                            | STRING        | JAVA_OBJECT     | Options.defaults()
+        [(LocalDate.MAX) : LocalDate.MIN]                | JAVA_OBJECT   | JAVA_OBJECT     | Options.defaults()
+        ['foo':FOO]                                      | STRING        | STRING          | new Options.Builder().compress(true).build()
     }
 
     @Unroll

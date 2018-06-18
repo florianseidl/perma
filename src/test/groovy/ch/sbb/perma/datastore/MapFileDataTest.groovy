@@ -12,7 +12,6 @@ import spock.lang.Unroll
 import static ch.sbb.perma.serializers.KeyOrValueSerializer.STRING
 
 class MapFileDataTest extends Specification {
-    private static final UUID uuid = UUID.fromString("d4b89e8b-49d8-4c36-a798-942fb025a402");
     private static final String NAME = "testmap";
     private static String VALUE_A = 'value A'
     private static String VALUE_B = 'nix als bledsinn for value B'
@@ -41,12 +40,12 @@ class MapFileDataTest extends Specification {
     }
 
     @Unroll
-    def "write read #map.keySet()"() {
+    def "write read #map.keySet() compression #compression"() {
         given:
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, map.size()), new NoCompression(),
+        new MapFileData(Header.newFullHeader(NAME, map.size()), compression,
                 ImmutableMap.copyOf(map),
                 ImmutableSet.of()
         )
@@ -55,13 +54,14 @@ class MapFileDataTest extends Specification {
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
                 STRING,
-                new NoCompression())
+                compression)
 
         then:
         extractMap(reread).equals(map)
 
         where:
-        map << [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B], [:], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]]
+        map << [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B], [:], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]] * 2
+        compression << [new NoCompression()] * 4 + [new GZipCompression()] * 4
     }
 
     @Unroll

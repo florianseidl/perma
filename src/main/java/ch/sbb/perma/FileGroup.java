@@ -8,6 +8,7 @@ import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,13 +49,27 @@ class FileGroup {
         }
     }
 
-    private final static String FILE_FORMAT = "%s_%d_%d.perma";
-    private final static String FILE_FORMAT_GZIP = FILE_FORMAT + ".gzip";
+    private static class FileFormat {
+        private final static String FILE_FORMAT_UNCOMPRESSED = "%s_%d_%d.perma";
+        private final static String FILE_FORMAT_GZIP = FILE_FORMAT_UNCOMPRESSED + ".gzip";
+
+        private final static Map<Class, String> FILE_FORMAT_BY_COMPRESSION = ImmutableMap.of(
+                NoCompression.class, FILE_FORMAT_UNCOMPRESSED,
+                GZipCompression.class, FILE_FORMAT_GZIP
+        );
+
+        String forCompression(Compression compression) {
+            return FILE_FORMAT_BY_COMPRESSION.get(compression.getClass());
+        }
+    }
+
+    private final static FileFormat FILE_FORMAT = new FileFormat();
     private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
     private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma(\\.gzip)?";
     private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma(\\.gzip)?";
     private final static Pattern GZIP_FILE_NAME_PATTERN = Pattern.compile(".*\\.perma\\.gzip");
     private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
+
 
     private final File dir;
     private final String name;
@@ -135,28 +150,27 @@ class FileGroup {
         return new FileGroup(
                         dir,
                         name,
-                        String.format(FILE_FORMAT, name, latestFullFileNumber + 1, 0),
+                        String.format(FILE_FORMAT.forCompression(compression), name, latestFullFileNumber + 1, 0),
                         ImmutableList.of());
     }
 
     FileGroup withNextDelta() {
-        int latestFullFileNumber = fullFilePattern(name).parseFileNumber(fullFileName);
-        int latestDeltaFileNumber = !deltaFileNames.isEmpty() ? deltaFilePattern(name, fullFileName)
-                                        .parseFileNumber(deltaFileNames.get(deltaFileNames.size() - 1))
-                                        : 0;
         return new FileGroup(dir,
                                 name,
                                 fullFileName,
                                 ImmutableList.<String>builder()
                                             .addAll(deltaFileNames)
-                                            .add(String.format(fileFormat(), name, latestFullFileNumber, latestDeltaFileNumber + 1))
+                                            .add(nextDeltaFileName())
                                             .build());
     }
 
-    private String fileFormat() {
-        return GZIP_FILE_NAME_PATTERN.matcher(fullFileName).matches() ?
-                FILE_FORMAT_GZIP :
-                FILE_FORMAT;
+    private String nextDeltaFileName() {
+        int latestFullFileNumber = fullFilePattern(name).parseFileNumber(fullFileName);
+        int latestDeltaFileNumber = !deltaFileNames.isEmpty() ? deltaFilePattern(name, fullFileName)
+                .parseFileNumber(deltaFileNames.get(deltaFileNames.size() - 1))
+                : 0;
+        String fileFormat = FILE_FORMAT.forCompression(compressionForExistingGroup());
+        return String.format(fileFormat, name, latestFullFileNumber, latestDeltaFileNumber + 1);
     }
 
     boolean delete() throws IOException {
@@ -190,6 +204,14 @@ class FileGroup {
             return new GZipCompression();
         }
         return new NoCompression();
+    }
+
+    private Compression compressionForExistingGroup() {
+        try {
+            return compression();
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("File should exist to dermine compression but was not found", e);
+        }
     }
 
     private File toFile(String fileName) {

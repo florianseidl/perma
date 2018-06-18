@@ -4,6 +4,8 @@
 
 package ch.sbb.perma
 
+import ch.sbb.perma.datastore.GZipCompression
+import ch.sbb.perma.datastore.NoCompression
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -67,6 +69,37 @@ class FileGroupTest extends Specification {
         ['foo_1_42.perma'] | 'foo'
     }
 
+
+    @Unroll
+    def "latest full file gzip #files"() {
+        given:
+        files.forEach {
+            touch(it)
+        }
+
+        when:
+        def latest = FileGroup.list(tempDir, 'foo')
+
+        then:
+        latest.fullFile().name == latestFullFile
+        latest.deltaFiles().collect { it.name } == latestDeltaFiles
+
+        where:
+        files                                       || latestFullFile       | latestDeltaFiles
+        ['foo_1_0.perma.gzip']                      || 'foo_1_0.perma.gzip' | []
+        ['foo_1_0.perma.gzip','foo_2_0.perma.gzip'] || 'foo_2_0.perma.gzip' | []
+        ['foo_1_0.perma','foo_2_0.perma.gzip']      || 'foo_2_0.perma.gzip' | []
+        ['foo_1_0.perma.gzip','foo_2_0.perma']      || 'foo_2_0.perma'      | []
+        ['foo_1_0.perma.gzip','foo_1_1.perma.gzip'] || 'foo_1_0.perma.gzip' | ['foo_1_1.perma.gzip']
+        ['foo_1_0.perma.gzip','foo_1_1.perma.gzip',
+         'foo_2_0.perma.gzip']                      || 'foo_2_0.perma.gzip' | []
+        ['foo_1_0.perma','foo_1_1.perma',
+         'foo_2_0.perma.gzip','foo_2_1.perma.gzip'] || 'foo_2_0.perma.gzip' | ['foo_2_1.perma.gzip']
+        ['foo_1_0.perma.gzip','foo_1_1.perma.gzip',
+         'foo_1_2.perma.gzip']                      || 'foo_1_0.perma.gzip' | ['foo_1_1.perma.gzip','foo_1_2.perma.gzip']
+
+    }
+
     @Unroll
     def "nextDeltaFile #files"() {
         given:
@@ -88,6 +121,18 @@ class FileGroupTest extends Specification {
         ['foo_1_0.perma']                  || 'foo_1_1.perma'
         ['foo_1_0.perma', 'foo_2_0.perma'] || 'foo_2_1.perma'
         ['foo_1_0.perma','foo_1_43.perma'] || 'foo_1_44.perma'
+        ['foo_1_0.perma.gzip']             || 'foo_1_1.perma.gzip'
+    }
+
+    def "nextDeltaFile nofile"() {
+        when:
+        FileGroup
+                .list(tempDir, 'foo' )
+                .withNextDelta()
+                .latestDeltaFile()
+
+        then:
+        thrown IllegalStateException
     }
 
     @Unroll
@@ -100,19 +145,22 @@ class FileGroupTest extends Specification {
         when:
         def nextFullFile = FileGroup
                 .list(tempDir, 'foo' )
-                .withNextFull()
+                .withNextFull(compression)
                 .fullFile()
 
         then:
         nextFullFile.name == nextFullFileName
 
         where:
-        files                              || nextFullFileName
-        ['foo_1_0.perma']                  || 'foo_2_0.perma'
-        ['foo_1_0.perma', 'foo_7_0.perma'] || 'foo_8_0.perma'
-        ['foo_1_0.perma','foo_1_43.perma'] || 'foo_2_0.perma'
-        []                                 || 'foo_1_0.perma'
-        ['foo_1_43.perma']                 || 'foo_1_0.perma'
+        files                              | compression           || nextFullFileName
+        ['foo_1_0.perma']                  | new NoCompression()   || 'foo_2_0.perma'
+        ['foo_1_0.perma', 'foo_7_0.perma'] | new NoCompression()   || 'foo_8_0.perma'
+        ['foo_1_0.perma','foo_1_43.perma'] | new NoCompression()   || 'foo_2_0.perma'
+        []                                 | new NoCompression()   || 'foo_1_0.perma'
+        ['foo_1_43.perma']                 | new NoCompression()   || 'foo_1_0.perma'
+        ['foo_1_0.perma.gzip']             | new GZipCompression() || 'foo_2_0.perma.gzip'
+        ['foo_1_0.perma','foo_2_0.perma']  | new GZipCompression() || 'foo_3_0.perma.gzip'
+        []                                 | new GZipCompression() || 'foo_1_0.perma.gzip'
     }
 
     def touch(name) {
@@ -224,6 +272,32 @@ class FileGroupTest extends Specification {
         []                                 | ['foo_1_0.perma']                  || false
         []                                 | []                                 || true
     }
+
+    @Unroll
+    def "compression #files"() {
+        given:
+        files.forEach {
+            touch(it)
+        }
+
+        when:
+        def compression = FileGroup.list(tempDir, 'foo' ).compression()
+
+        then:
+        compression.class == expectedCompression
+
+        where:
+        files                                   || expectedCompression
+        ['foo_1_0.perma']                       || NoCompression.class
+        ['foo_1_0.perma.gzip']                  || GZipCompression.class
+        ['foo_1_0.perma', 'foo_2_0.perma']      || NoCompression.class
+        ['foo_1_0.perma', 'foo_2_0.perma.gzip'] || GZipCompression.class
+        ['foo_1_0.perma.gzip', 'foo_2_0.perma'] || NoCompression.class
+        ['foo_1_0.perma', 'foo_1_1.perma',
+         'foo_2_0.perma.gzip']                  || GZipCompression.class
+        ['foo_1_0.perma', 'foo_1_1.perma.gzip'] || NoCompression.class // invalid szenario
+    }
+
 
 
     def "create temp file"() {
