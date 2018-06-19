@@ -17,5 +17,6 @@ import java.io.OutputStream;
 public interface Compression {
     OutputStream compress(OutputStream out) throws IOException;
     InputStream deflate(InputStream in) throws IOException;
+    FileNameFormat fileNameFormat();
 
 }

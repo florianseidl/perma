@@ -28,4 +28,8 @@ public class GZipCompression implements Compression {
         return new GZIPInputStream(in);
     }
 
+    @Override
+    public FileNameFormat fileNameFormat() {
+        return FileNameFormat.GZIP_FILE;
+    }
 }

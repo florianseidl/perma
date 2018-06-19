@@ -24,4 +24,10 @@ public class NoCompression implements Compression {
     public InputStream deflate(InputStream in) {
         return in;
     }
+
+    @Override
+    public FileNameFormat fileNameFormat() {
+        return FileNameFormat.UNCOMPRESSED_FILE;
+    }
+
 }

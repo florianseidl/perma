@@ -8,7 +8,6 @@ import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,21 +48,6 @@ class FileGroup {
         }
     }
 
-    private static class FileFormat {
-        private final static String FILE_FORMAT_UNCOMPRESSED = "%s_%d_%d.perma";
-        private final static String FILE_FORMAT_GZIP = FILE_FORMAT_UNCOMPRESSED + ".gzip";
-
-        private final static Map<Class, String> FILE_FORMAT_BY_COMPRESSION = ImmutableMap.of(
-                NoCompression.class, FILE_FORMAT_UNCOMPRESSED,
-                GZipCompression.class, FILE_FORMAT_GZIP
-        );
-
-        String forCompression(Compression compression) {
-            return FILE_FORMAT_BY_COMPRESSION.get(compression.getClass());
-        }
-    }
-
-    private final static FileFormat FILE_FORMAT = new FileFormat();
     private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
     private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma(\\.gzip)?";
     private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma(\\.gzip)?";
@@ -150,7 +134,10 @@ class FileGroup {
         return new FileGroup(
                         dir,
                         name,
-                        String.format(FILE_FORMAT.forCompression(compression), name, latestFullFileNumber + 1, 0),
+                        compression
+                                .fileNameFormat()
+                                .template(name)
+                                .format(latestFullFileNumber + 1, 0),
                         ImmutableList.of());
     }
 
@@ -169,8 +156,10 @@ class FileGroup {
         int latestDeltaFileNumber = !deltaFileNames.isEmpty() ? deltaFilePattern(name, fullFileName)
                 .parseFileNumber(deltaFileNames.get(deltaFileNames.size() - 1))
                 : 0;
-        String fileFormat = FILE_FORMAT.forCompression(compressionForExistingGroup());
-        return String.format(fileFormat, name, latestFullFileNumber, latestDeltaFileNumber + 1);
+        return compressionForExistingGroup()
+                .fileNameFormat()
+                .template(name)
+                .format(latestFullFileNumber, latestDeltaFileNumber + 1);
     }
 
     boolean delete() throws IOException {
