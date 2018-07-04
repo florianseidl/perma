@@ -4,6 +4,8 @@
 
 package ch.sbb.perma.datastore;
 
+import ch.sbb.perma.file.FileNameFormat;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -29,5 +31,4 @@ public class NoCompression implements Compression {
     public FileNameFormat fileNameFormat() {
         return FileNameFormat.UNCOMPRESSED_FILE;
     }
-
 }

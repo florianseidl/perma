@@ -4,6 +4,8 @@
 
 package ch.sbb.perma.datastore;
 
+import ch.sbb.perma.file.FileNameFormat;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

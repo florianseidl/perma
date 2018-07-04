@@ -124,19 +124,8 @@ class FileGroupTest extends Specification {
         ['foo_1_0.perma.gzip']             || 'foo_1_1.perma.gzip'
     }
 
-    def "nextDeltaFile nofile"() {
-        when:
-        FileGroup
-                .list(tempDir, 'foo' )
-                .withNextDelta()
-                .latestDeltaFile()
-
-        then:
-        thrown IllegalStateException
-    }
-
     @Unroll
-    def "nextFullFile #files"() {
+    def "nextFullFile #files #compression.class.simpleName"() {
         given:
         files.forEach {
             touch(it)
