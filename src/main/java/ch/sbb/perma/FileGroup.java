@@ -8,6 +8,7 @@ import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
 import ch.sbb.perma.file.FileName;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -38,9 +39,9 @@ class FileGroup {
                 return 0;
             }
             Matcher matcher = pattern.matcher(fileName);
-            if (!matcher.find()) {
-                throw new IllegalArgumentException(String.format("Invalid file name %s", fileName));
-            }
+            Preconditions.checkArgument(
+                    matcher.find(),
+                    String.format("Invalid file name %s", fileName));
             return Integer.parseInt(matcher.group(1));
         }
 

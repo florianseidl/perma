@@ -5,6 +5,8 @@
 package ch.sbb.perma.file;
 
 import ch.sbb.perma.datastore.Compression;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 
 import java.util.Objects;
 
@@ -64,10 +66,11 @@ public final class FileName implements Comparable<FileName> {
 
     @Override
     public int compareTo(FileName other) {
-        if(fullFileNumber == other.fullFileNumber) {
-            return Integer.compare(deltaFileNumber, other.deltaFileNumber);
-        }
-        return Integer.compare(fullFileNumber, other.fullFileNumber);
+        Preconditions.checkArgument(permaName.equals(other.permaName), "Can only compare within the same perma");
+        return ComparisonChain.start()
+                .compare(fullFileNumber, other.fullFileNumber)
+                .compare(deltaFileNumber, other.deltaFileNumber)
+                .result();
     }
 
     @Override

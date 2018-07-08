@@ -7,6 +7,7 @@ package ch.sbb.perma;
 import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
+import com.google.common.base.Preconditions;
 
 /**
  * API to configure optional features in perma.
@@ -36,9 +37,9 @@ public class Options {
         }
 
         public Options build() {
-            if(compactThresholdPercent < 0 || compactThresholdPercent > 100) {
-                throw new IllegalArgumentException(String.format("Invalid percent value for compactThresholdPercent: %d", compactThresholdPercent));
-            }
+            Preconditions.checkArgument(
+                    compactThresholdPercent >= 0 && compactThresholdPercent <= 100,
+                    String.format("Invalid percent value for compactThresholdPercent: %d", compactThresholdPercent));
             return new Options(compress, compactThresholdPercent);
         }
     }
