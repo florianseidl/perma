@@ -5,8 +5,6 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.Compression;
-import ch.sbb.perma.datastore.GZipCompression;
-import ch.sbb.perma.datastore.NoCompression;
 import ch.sbb.perma.file.DeltaFilePattern;
 import ch.sbb.perma.file.FileName;
 import ch.sbb.perma.file.FullFilePattern;
@@ -29,30 +27,6 @@ import java.util.stream.Collectors;
  * @since 1.0, 2017.
  */
 class FileGroup {
-
-    private static class FilePattern {
-        private final Pattern pattern;
-
-        FilePattern(String template, Object... params) {
-            this.pattern = Pattern.compile(String.format(template, params));
-        }
-
-        int parseFileNumber(String fileName) {
-            if (fileName == null) {
-                return 0;
-            }
-            Matcher matcher = pattern.matcher(fileName);
-            Preconditions.checkArgument(
-                    matcher.find(),
-                    String.format("Invalid file name %s", fileName));
-            return Integer.parseInt(matcher.group(1));
-        }
-
-        String[] listFileNames(File dir) {
-            return listDir(dir, pattern);
-        }
-    }
-
     private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
     private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
 
@@ -60,7 +34,6 @@ class FileGroup {
     private final String name;
     private final FileName fullFileName;
     private final ImmutableList<FileName> deltaFileNames;
-
 
     private FileGroup(File dir, String name, FileName fullFileName, ImmutableList<FileName> deltaFileNames) {
         this.dir = dir;
