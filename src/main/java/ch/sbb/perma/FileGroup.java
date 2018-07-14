@@ -7,12 +7,15 @@ package ch.sbb.perma;
 import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
+import ch.sbb.perma.file.DeltaFilePattern;
 import ch.sbb.perma.file.FileName;
+import ch.sbb.perma.file.FullFilePattern;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -51,11 +54,7 @@ class FileGroup {
     }
 
     private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
-    private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma(\\.gzip)?";
-    private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma(\\.gzip)?";
-    private final static Pattern GZIP_FILE_NAME_PATTERN = Pattern.compile(".*\\.perma\\.gzip");
     private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
-
 
     private final File dir;
     private final String name;
@@ -70,12 +69,12 @@ class FileGroup {
         this.deltaFileNames = deltaFileNames;
     }
 
-    static FileGroup list(File dir, String name) {
+    public static FileGroup list(File dir, String name) {
         return latestFullFileName(dir, name)
                 .map(latestFullFileName -> new FileGroup(dir,
                         name,
                         latestFullFileName,
-                        deltaFileNamesOf(dir, name, latestFullFileName)))
+                        latestFullFileName.deltaFileNamePattern().parse(listDir(dir, latestFullFileName.deltaFileNamePattern()))))
                 .orElse(new FileGroup(dir, name, null, ImmutableList.of()));
     }
 
@@ -135,7 +134,7 @@ class FileGroup {
             return new FileGroup(
                     dir,
                     name,
-                    compression.fileNameFormat().fullFile(name, 1),
+                    FileName.fullFile(compression, name, 1),
                     ImmutableList.of());
         }
         return new FileGroup(
@@ -180,7 +179,7 @@ class FileGroup {
 
     void deleteStaleTempFiles() {
         Pattern tempFilePattern = Pattern.compile(String.format(TEMP_FILE_PATTERN_TEMPLATE, name));
-        Arrays.stream(listDir(dir, tempFilePattern))
+        Arrays.stream(listDir(dir, (dir, s) -> tempFilePattern.matcher(s).matches()))
                 .forEach(filename -> new File(dir, filename).delete());
     }
 
@@ -188,55 +187,25 @@ class FileGroup {
         return fullFileName.compression();
     }
 
-    private Compression compressionForExistingGroup() {
-        try {
-            return compression();
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException("File should exist to dermine compression but was not found", e);
-        }
-    }
-
     private File toFile(FileName fileName) {
         return new File(dir, fileName.toString());
     }
 
-    private static ImmutableList<FileName> deltaFileNamesOf(File dir, String name, FileName fullFileName) {
-        FilePattern deltaFilePattern = deltaFilePattern(name, fullFileName.toString());
-        return Arrays.stream(deltaFilePattern.listFileNames(dir))
-                .map(fileName -> fullFileName.delta(deltaFilePattern.parseFileNumber(fileName)))
-                .sorted(Comparator.naturalOrder())
-                .collect(ImmutableList.toImmutableList());
+    private static List<FileName> deltaFileNamesOf(File dir, FileName fullFileName) {
+        DeltaFilePattern deltaFilePattern = fullFileName.deltaFileNamePattern();
+        return deltaFilePattern.parse(listDir(dir, deltaFilePattern));
     }
 
     private static Optional<FileName> latestFullFileName(File dir, String name) {
-        FilePattern fullFilePattern = fullFilePattern(name);
+        FullFilePattern fullFilePattern = new FullFilePattern(name);
         return Arrays
-                .stream(fullFilePattern.listFileNames(dir))
-                .map(fileName -> compressionOf(fileName).fileNameFormat().fullFile(name, fullFilePattern(name).parseFileNumber(fileName)))
+                .stream(listDir(dir, fullFilePattern))
+                .map(fullFilePattern::parse)
                 .max(Comparator.naturalOrder());
     }
 
-    private static Compression compressionOf(String fileName) {
-        if (GZIP_FILE_NAME_PATTERN.matcher(fileName).matches()) {
-            return new GZipCompression();
-        }
-        return new NoCompression();
-    }
-
-
-    private static FilePattern fullFilePattern(String name) {
-        return new FilePattern(FULL_FILE_NAME_PATTERN_TEMPLATE, name);
-    }
-
-    private static FilePattern deltaFilePattern(String name, String fullFileName) {
-        int fullFileNumber = fullFilePattern(name).parseFileNumber(fullFileName);
-        return new FilePattern(String.format(DELTA_FILE_NAME_PATTERN_TEMPLATE, name, fullFileNumber));
-    }
-
-    private static String[] listDir(File dir, Pattern pattern) {
-        String[] list = dir.list(
-                (file, s) -> pattern.matcher(s).matches()
-        );
+    private static String[] listDir(File dir, FilenameFilter filenameFilter) {
+        String[] list = dir.list(filenameFilter);
         return list != null ? list : new String[]{};
     }
 

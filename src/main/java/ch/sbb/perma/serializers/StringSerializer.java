@@ -5,6 +5,7 @@
 package ch.sbb.perma.serializers;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Serialize non-null-Strings. Can be constructed with a charset to use, default is UTF-8 (recomended).
@@ -21,8 +22,8 @@ import java.nio.charset.Charset;
  * @since 1.0, 2017.
  */
 public class StringSerializer implements KeyOrValueSerializer<String> {
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
-    public static final Charset UTF_16BE = Charset.forName("UTF-16BE");
+    public static final Charset UTF_8 = StandardCharsets.UTF_8;
+    public static final Charset UTF_16BE = StandardCharsets.UTF_16BE;
 
     private final Charset charset;
 

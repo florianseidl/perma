@@ -8,37 +8,40 @@ import ch.sbb.perma.datastore.Compression;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 
+import java.util.List;
 import java.util.Objects;
 
 public final class FileName implements Comparable<FileName> {
     private final Compression compression;
-    private final String format;
     private final String permaName;
     private final int fullFileNumber;
     private final int deltaFileNumber;
 
-    private FileName(Compression compression, String format, String permaName, int fullFileNumber, int deltaFileNumber) {
+    private FileName(Compression compression, String permaName, int fullFileNumber, int deltaFileNumber) {
         this.compression = compression;
-        this.format = format;
         this.permaName = permaName;
         this.fullFileNumber = fullFileNumber;
         this.deltaFileNumber = deltaFileNumber;
     }
 
-    static FileName fullFile(Compression compression, String format, String permaName, int fullFileNumber) {
-        return new FileName(compression, format, permaName, fullFileNumber, 0);
+    public static FileName fullFile(Compression compression, String permaName, int fullFileNumber) {
+        return new FileName(compression, permaName, fullFileNumber, 0);
+    }
+
+    public DeltaFilePattern deltaFileNamePattern() {
+        return new DeltaFilePattern(this, permaName, fullFileNumber);
     }
 
     public FileName nextDelta() {
-        return new FileName(compression, format, permaName, fullFileNumber, deltaFileNumber + 1);
+        return new FileName(compression, permaName, fullFileNumber, deltaFileNumber + 1);
     }
 
     public FileName nextFull(Compression compression) {
-        return compression.fileNameFormat().fullFile(permaName, fullFileNumber + 1);
+        return fullFile(compression, permaName, fullFileNumber + 1);
     }
 
     public FileName delta(int nr) {
-        return new FileName(compression, format, permaName, fullFileNumber, nr);
+        return new FileName(compression, permaName, fullFileNumber, nr);
     }
 
     public Compression compression() {
@@ -75,6 +78,6 @@ public final class FileName implements Comparable<FileName> {
 
     @Override
     public String toString() {
-        return String.format(format, permaName, fullFileNumber, deltaFileNumber);
+        return compression.fileNameFormat().format(permaName, fullFileNumber, deltaFileNumber);
     }
 }
