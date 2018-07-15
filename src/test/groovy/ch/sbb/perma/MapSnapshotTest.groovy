@@ -7,6 +7,7 @@ package ch.sbb.perma
 import ch.sbb.perma.datastore.GZipCompression
 import ch.sbb.perma.datastore.HeaderMismatchException
 import ch.sbb.perma.datastore.NoCompression
+import ch.sbb.perma.file.PermaFile
 import ch.sbb.perma.serializers.KeyOrValueSerializer
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -138,7 +139,7 @@ class MapSnapshotTest extends Specification {
         def firstDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
         def secondDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[1]
         firstDelta.delete()
-        secondDelta.renameTo(firstDelta)
+        rename(secondDelta, firstDelta)
 
         PersistedMapSnapshot.load(
                 'foo',
@@ -170,10 +171,10 @@ class MapSnapshotTest extends Specification {
         newSnapshotFoo.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C])
         newSnapshotBar.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C]).writeNext(['A':VALUE_A,'C':VALUE_C, 'B':VALUE_B]);
 
-        File firstFooDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
-        File lastBarDelta = FileGroup.list(tempDir, 'bar').deltaFiles()[1]
+        PermaFile firstFooDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
+        PermaFile lastBarDelta = FileGroup.list(tempDir, 'bar').deltaFiles()[1]
         lastBarDelta.delete()
-        firstFooDelta.renameTo(lastBarDelta)
+        rename(firstFooDelta, lastBarDelta)
 
         PersistedMapSnapshot.load(
                 'bar',
@@ -201,7 +202,7 @@ class MapSnapshotTest extends Specification {
         def files = FileGroup.list(tempDir, 'foo')
         def firstDelta = files.deltaFiles()[0]
         files.fullFile().delete()
-        firstDelta.renameTo(files.fullFile())
+        rename(firstDelta, files.fullFile())
 
         PersistedMapSnapshot.load(
                 'foo',
@@ -449,5 +450,14 @@ class MapSnapshotTest extends Specification {
         map                                     | options              | compression
         ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.defaults()   | NoCompression.class
         ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.compressed() | GZipCompression.class
+    }
+
+
+    def rename(PermaFile source, PermaFile target) {
+        toFile(source).renameTo(toFile(target))
+    }
+
+    File toFile(PermaFile permaFile) {
+        return new File(permaFile.toString())
     }
 }

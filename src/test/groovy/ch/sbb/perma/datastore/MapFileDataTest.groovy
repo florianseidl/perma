@@ -29,7 +29,7 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, 1), new NoCompression(),
+        new MapFileData(Header.newFullHeader(NAME, 1),
                 ImmutableMap.copyOf(['A': VALUE_A]),
                 ImmutableSet.of()
         )
@@ -45,7 +45,7 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, map.size()), compression,
+        new MapFileData(Header.newFullHeader(NAME, map.size()),
                 ImmutableMap.copyOf(map),
                 ImmutableSet.of()
         )
@@ -53,8 +53,7 @@ class MapFileDataTest extends Specification {
         def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
-                STRING,
-                compression)
+                STRING)
 
         then:
         extractMap(reread).equals(map)
@@ -70,7 +69,7 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, 2), new NoCompression(),
+        new MapFileData(Header.newFullHeader(NAME, 2),
                 ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
                 ImmutableSet.of()
         )
@@ -79,8 +78,7 @@ class MapFileDataTest extends Specification {
                 new ByteArrayInputStream(manipulate(out.toByteArray(),
                                          length(Header.newFullHeader(NAME, 2)) + b)),
                 STRING,
-                STRING,
-                new NoCompression())
+                STRING)
 
         then:
         thrown InvalidDataException
@@ -101,7 +99,8 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, deleted.size()), new NoCompression(),
+        new MapFileData(
+                Header.newFullHeader(NAME, deleted.size()),
                 ImmutableMap.of(),
                 ImmutableSet.copyOf(deleted as Set)
         )
@@ -109,8 +108,7 @@ class MapFileDataTest extends Specification {
         def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
-                STRING,
-                new NoCompression())
+                STRING)
 
         then:
         extractMap(reread, existingMap).equals(expected)
@@ -130,7 +128,7 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, newOrUpdated.size() + deleted.size()), new NoCompression(),
+        new MapFileData(Header.newFullHeader(NAME, newOrUpdated.size() + deleted.size()),
                 ImmutableMap.copyOf(newOrUpdated),
                 ImmutableSet.copyOf(deleted as Set)
         )
@@ -138,8 +136,7 @@ class MapFileDataTest extends Specification {
         def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
                 STRING,
-                STRING,
-                new NoCompression())
+                STRING)
 
         then:
         extractMap(reread).equals(expected)
@@ -154,7 +151,7 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, 1), new NoCompression(),
+        new MapFileData(Header.newFullHeader(NAME, 1),
                 ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
                 ImmutableSet.of()
         )
@@ -169,7 +166,7 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, 2), new NoCompression(),
+        new MapFileData(Header.newFullHeader(NAME, 2),
                 ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
                 ImmutableSet.of()
         )
@@ -181,8 +178,7 @@ class MapFileDataTest extends Specification {
         MapFileData.readFrom(
                 new ByteArrayInputStream(merged),
                 STRING,
-                STRING,
-                new NoCompression())
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -201,7 +197,7 @@ class MapFileDataTest extends Specification {
     def toStringIsImplemented() {
         when:
         def mapDataToString = new MapFileData(
-                Header.newFullHeader(NAME, 2), new NoCompression(),
+                Header.newFullHeader(NAME, 2),
                 ImmutableMap.of('A', VALUE_A),
                 ImmutableSet.of('C')
         )

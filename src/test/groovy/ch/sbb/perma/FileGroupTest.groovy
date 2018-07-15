@@ -4,8 +4,13 @@
 
 package ch.sbb.perma
 
+import ch.sbb.perma.datastore.Compression
 import ch.sbb.perma.datastore.GZipCompression
 import ch.sbb.perma.datastore.NoCompression
+import ch.sbb.perma.file.DeltaFilePattern
+import ch.sbb.perma.file.FullFilePattern
+import ch.sbb.perma.file.PermaFile
+import com.google.common.collect.ImmutableList
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -28,24 +33,24 @@ class FileGroupTest extends Specification {
         }
 
         when:
-        def latest = FileGroup.list(tempDir, name)
+        def latest = FileGroup.list(tempDir, permaName)
 
         then:
-        latest.fullFile().name == latestFullFile
-        latest.deltaFiles().collect { it.name } == latestDeltaFiles
+        latest.fullFile() == toFullFile(permaName, latestFullFile)
+        latest.deltaFiles() == toDeltaFiles(latest.fullFile(), latestDeltaFiles)
 
         where:
-        files                                              | name  || latestFullFile  | latestDeltaFiles
-        ['foo_1_0.perma']                                  | 'foo' || 'foo_1_0.perma' | []
-        ['foo_1_0.perma', 'foo_2_0.perma']                 | 'foo' || 'foo_2_0.perma' | []
-        ['foo_1_0.perma', 'foo_0_1.perma']                 | 'foo' || 'foo_1_0.perma' | []
-        ['foo_1_0.perma', 'bar_1_0.perma']                 | 'foo' || 'foo_1_0.perma' | []
-        ['foo_1_0.perma', 'bar_1_0.perma']                 | 'bar' || 'bar_1_0.perma' | []
+        files                                                | permaName || latestFullFile  | latestDeltaFiles
+        ['foo_1_0.perma']                                    | 'foo'     || 'foo_1_0.perma' | []
+        ['foo_1_0.perma', 'foo_2_0.perma']                   | 'foo'     || 'foo_2_0.perma' | []
+        ['foo_1_0.perma', 'foo_0_1.perma']                   | 'foo'     || 'foo_1_0.perma' | []
+        ['foo_1_0.perma', 'bar_1_0.perma']                   | 'foo'     || 'foo_1_0.perma' | []
+        ['foo_1_0.perma', 'bar_1_0.perma']                   | 'bar'     || 'bar_1_0.perma' | []
         ['foo_2_0.perma', 'foo_2_1.perma',
-         'foo_1_0.perma','foo_1_1.perma','foo_1_2.perma']  | 'foo' || 'foo_2_0.perma' | ['foo_2_1.perma']
+         'foo_1_0.perma', 'foo_1_1.perma', 'foo_1_2.perma']  | 'foo'     || 'foo_2_0.perma' | ['foo_2_1.perma']
         ['foo_1_0.perma', 'foo_1_1.perma',
-         'foo_1_2.perma','foo_1_3.perma','foo_1_42.perma'] | 'foo' || 'foo_1_0.perma' | ['foo_1_1.perma', 'foo_1_2.perma',
-                                                                                         'foo_1_3.perma','foo_1_42.perma']
+         'foo_1_2.perma', 'foo_1_3.perma', 'foo_1_42.perma'] | 'foo'     || 'foo_1_0.perma' | ['foo_1_1.perma', 'foo_1_2.perma',
+                                                                                               'foo_1_3.perma', 'foo_1_42.perma']
     }
 
     @Unroll
@@ -56,14 +61,14 @@ class FileGroupTest extends Specification {
         }
 
         when:
-        def files = FileGroup.list(tempDir, name)
+        def files = FileGroup.list(tempDir, permaName)
 
         then:
         !files.exists()
         files.deltaFiles().isEmpty()
 
         where:
-        existingFiles      | name
+        existingFiles      | permaName
         []                 | 'foo'
         ['foo_1_0.perma']  | 'bar'
         ['foo_1_42.perma'] | 'foo'
@@ -81,22 +86,22 @@ class FileGroupTest extends Specification {
         def latest = FileGroup.list(tempDir, 'foo')
 
         then:
-        latest.fullFile().name == latestFullFile
-        latest.deltaFiles().collect { it.name } == latestDeltaFiles
+        latest.fullFile() == toFullFile('foo', latestFullFile)
+        latest.deltaFiles() == toDeltaFiles(latest.fullFile(), latestDeltaFiles)
 
         where:
-        files                                       || latestFullFile       | latestDeltaFiles
-        ['foo_1_0.perma.gzip']                      || 'foo_1_0.perma.gzip' | []
-        ['foo_1_0.perma.gzip','foo_2_0.perma.gzip'] || 'foo_2_0.perma.gzip' | []
-        ['foo_1_0.perma','foo_2_0.perma.gzip']      || 'foo_2_0.perma.gzip' | []
-        ['foo_1_0.perma.gzip','foo_2_0.perma']      || 'foo_2_0.perma'      | []
-        ['foo_1_0.perma.gzip','foo_1_1.perma.gzip'] || 'foo_1_0.perma.gzip' | ['foo_1_1.perma.gzip']
-        ['foo_1_0.perma.gzip','foo_1_1.perma.gzip',
-         'foo_2_0.perma.gzip']                      || 'foo_2_0.perma.gzip' | []
-        ['foo_1_0.perma','foo_1_1.perma',
-         'foo_2_0.perma.gzip','foo_2_1.perma.gzip'] || 'foo_2_0.perma.gzip' | ['foo_2_1.perma.gzip']
-        ['foo_1_0.perma.gzip','foo_1_1.perma.gzip',
-         'foo_1_2.perma.gzip']                      || 'foo_1_0.perma.gzip' | ['foo_1_1.perma.gzip','foo_1_2.perma.gzip']
+        files                                        || latestFullFile       | latestDeltaFiles
+        ['foo_1_0.perma.gzip']                       || 'foo_1_0.perma.gzip' | []
+        ['foo_1_0.perma.gzip', 'foo_2_0.perma.gzip'] || 'foo_2_0.perma.gzip' | []
+        ['foo_1_0.perma', 'foo_2_0.perma.gzip']      || 'foo_2_0.perma.gzip' | []
+        ['foo_1_0.perma.gzip', 'foo_2_0.perma']      || 'foo_2_0.perma'      | []
+        ['foo_1_0.perma.gzip', 'foo_1_1.perma.gzip'] || 'foo_1_0.perma.gzip' | ['foo_1_1.perma.gzip']
+        ['foo_1_0.perma.gzip', 'foo_1_1.perma.gzip',
+         'foo_2_0.perma.gzip']                       || 'foo_2_0.perma.gzip' | []
+        ['foo_1_0.perma', 'foo_1_1.perma',
+         'foo_2_0.perma.gzip', 'foo_2_1.perma.gzip'] || 'foo_2_0.perma.gzip' | ['foo_2_1.perma.gzip']
+        ['foo_1_0.perma.gzip', 'foo_1_1.perma.gzip',
+         'foo_1_2.perma.gzip']                       || 'foo_1_0.perma.gzip' | ['foo_1_1.perma.gzip', 'foo_1_2.perma.gzip']
 
     }
 
@@ -106,26 +111,26 @@ class FileGroupTest extends Specification {
         files.forEach {
             touch(it)
         }
+        FileGroup fileGroup = FileGroup.list(tempDir, 'foo')
 
         when:
-        def nextDeltaFile = FileGroup
-                .list(tempDir, 'foo' )
+        def nextDeltaFile = fileGroup
                 .withNextDelta()
                 .latestDeltaFile()
 
         then:
-        nextDeltaFile.name == nextDeltaFileName
+        nextDeltaFile == toDeltaFile(fileGroup.fullFile(), expectedNextDeltaFile)
 
         where:
-        files                              || nextDeltaFileName
-        ['foo_1_0.perma']                  || 'foo_1_1.perma'
-        ['foo_1_0.perma', 'foo_2_0.perma'] || 'foo_2_1.perma'
-        ['foo_1_0.perma','foo_1_43.perma'] || 'foo_1_44.perma'
-        ['foo_1_0.perma.gzip']             || 'foo_1_1.perma.gzip'
+        files                               || expectedNextDeltaFile
+        ['foo_1_0.perma']                   || 'foo_1_1.perma'
+        ['foo_1_0.perma', 'foo_2_0.perma']  || 'foo_2_1.perma'
+        ['foo_1_0.perma', 'foo_1_43.perma'] || 'foo_1_44.perma'
+        ['foo_1_0.perma.gzip']              || 'foo_1_1.perma.gzip'
     }
 
     @Unroll
-    def "nextFullFile #files #compression.class.simpleName"() {
+    def "nextFullFile #files #compression.class.simplepermaName"() {
         given:
         files.forEach {
             touch(it)
@@ -133,27 +138,27 @@ class FileGroupTest extends Specification {
 
         when:
         def nextFullFile = FileGroup
-                .list(tempDir, 'foo' )
+                .list(tempDir, 'foo')
                 .withNextFull(compression)
                 .fullFile()
 
         then:
-        nextFullFile.name == nextFullFileName
+        nextFullFile == toFullFile('foo', nextFullFileName);
 
         where:
-        files                              | compression           || nextFullFileName
-        ['foo_1_0.perma']                  | new NoCompression()   || 'foo_2_0.perma'
-        ['foo_1_0.perma', 'foo_7_0.perma'] | new NoCompression()   || 'foo_8_0.perma'
-        ['foo_1_0.perma','foo_1_43.perma'] | new NoCompression()   || 'foo_2_0.perma'
-        []                                 | new NoCompression()   || 'foo_1_0.perma'
-        ['foo_1_43.perma']                 | new NoCompression()   || 'foo_1_0.perma'
-        ['foo_1_0.perma.gzip']             | new GZipCompression() || 'foo_2_0.perma.gzip'
-        ['foo_1_0.perma','foo_2_0.perma']  | new GZipCompression() || 'foo_3_0.perma.gzip'
-        []                                 | new GZipCompression() || 'foo_1_0.perma.gzip'
+        files                               | compression           || nextFullFileName
+        ['foo_1_0.perma']                   | new NoCompression()   || 'foo_2_0.perma'
+        ['foo_1_0.perma', 'foo_7_0.perma']  | new NoCompression()   || 'foo_8_0.perma'
+        ['foo_1_0.perma', 'foo_1_43.perma'] | new NoCompression()   || 'foo_2_0.perma'
+        []                                  | new NoCompression()   || 'foo_1_0.perma'
+        ['foo_1_43.perma']                  | new NoCompression()   || 'foo_1_0.perma'
+        ['foo_1_0.perma.gzip']              | new GZipCompression() || 'foo_2_0.perma.gzip'
+        ['foo_1_0.perma', 'foo_2_0.perma']  | new GZipCompression() || 'foo_3_0.perma.gzip'
+        []                                  | new GZipCompression() || 'foo_1_0.perma.gzip'
     }
 
-    def touch(name) {
-        new File(tempDir, name).createNewFile();
+    def touch(permaName) {
+        new File(tempDir, permaName).createNewFile();
     }
 
     def "list no file FileNotFoundException"() {
@@ -178,7 +183,7 @@ class FileGroupTest extends Specification {
         thrown FileNotFoundException
 
         where:
-        existingFiles << [[], ['foo_1_0.perma'],['foo_1_42.perma']]
+        existingFiles << [[], ['foo_1_0.perma'], ['foo_1_42.perma']]
     }
 
     @Unroll
@@ -187,9 +192,9 @@ class FileGroupTest extends Specification {
         filesToWriteBefore.forEach {
             touch(it)
         }
+        def filesBefore = FileGroup.list(tempDir, 'foo')
 
         when:
-        def filesBefore = FileGroup.list(tempDir, 'foo' )
         filesToWriteNow.forEach {
             touch(it)
         }
@@ -197,17 +202,17 @@ class FileGroupTest extends Specification {
         def deltaFilesSince = filesNow.deltaFilesSince(filesBefore)
 
         then:
-        deltaFilesSince.collect { it.name } == result
+        deltaFilesSince == toDeltaFiles(filesNow.fullFile(), expectedDeltaFilesSince)
 
         where:
-        filesToWriteBefore                 | filesToWriteNow                                   || result
-        ['foo_1_0.perma']                  | ['foo_1_0.perma','foo_1_1.perma']                 || ['foo_1_1.perma']
-        []                                 | ['foo_1_0.perma','foo_1_1.perma']                 || ['foo_1_1.perma']
-        []                                 | ['foo_1_0.perma']                                 || []
-        ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_2.perma'] || ['foo_1_2.perma']
-        ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_2.perma',
-                                              'foo_1_3.perma']                                 || ['foo_1_2.perma','foo_1_3.perma']
-        ['foo_1_0.perma','foo_1_1.perma']  | ['foo_1_0.perma','foo_1_1.perma','foo_1_3.perma'] || ['foo_1_3.perma']
+        filesToWriteBefore                 | filesToWriteNow                                     || expectedDeltaFilesSince
+        ['foo_1_0.perma']                  | ['foo_1_0.perma', 'foo_1_1.perma']                  || ['foo_1_1.perma']
+        []                                 | ['foo_1_0.perma', 'foo_1_1.perma']                  || ['foo_1_1.perma']
+        []                                 | ['foo_1_0.perma']                                   || []
+        ['foo_1_0.perma', 'foo_1_1.perma'] | ['foo_1_0.perma', 'foo_1_1.perma', 'foo_1_2.perma'] || ['foo_1_2.perma']
+        ['foo_1_0.perma', 'foo_1_1.perma'] | ['foo_1_0.perma', 'foo_1_1.perma', 'foo_1_2.perma',
+                                              'foo_1_3.perma']                                   || ['foo_1_2.perma', 'foo_1_3.perma']
+        ['foo_1_0.perma', 'foo_1_1.perma'] | ['foo_1_0.perma', 'foo_1_1.perma', 'foo_1_3.perma'] || ['foo_1_3.perma']
     }
 
     @Unroll
@@ -219,7 +224,7 @@ class FileGroupTest extends Specification {
 
         when:
         FileGroup
-                .list(tempDir, 'foo' )
+                .list(tempDir, 'foo')
                 .delete()
 
         then:
@@ -229,8 +234,8 @@ class FileGroupTest extends Specification {
         files                              || remaining
         ['foo_1_0.perma']                  || []
         ['foo_1_0.perma', 'foo_2_0.perma'] || ['foo_1_0.perma']
-        ['foo_1_0.perma','foo_1_1.perma',
-         'foo_2_0.perma','foo_2_1.perma']  || ['foo_1_0.perma','foo_1_1.perma']
+        ['foo_1_0.perma', 'foo_1_1.perma',
+         'foo_2_0.perma', 'foo_2_1.perma'] || ['foo_1_0.perma', 'foo_1_1.perma']
         []                                 || []
     }
 
@@ -242,11 +247,11 @@ class FileGroupTest extends Specification {
         }
 
         when:
-        def filesBeforeB = FileGroup.list(tempDir, 'foo' )
+        def filesBeforeB = FileGroup.list(tempDir, 'foo')
         filesB.forEach {
             touch(it)
         }
-        def filesAfterB = FileGroup.list(tempDir, 'foo' )
+        def filesAfterB = FileGroup.list(tempDir, 'foo')
         def sameFullFile = filesAfterB.hasSameFullFileAs(filesBeforeB)
 
         then:
@@ -270,7 +275,7 @@ class FileGroupTest extends Specification {
         }
 
         when:
-        def compression = FileGroup.list(tempDir, 'foo' ).compression()
+        def compression = FileGroup.list(tempDir, 'foo').compression()
 
         then:
         compression.class == expectedCompression
@@ -288,11 +293,10 @@ class FileGroupTest extends Specification {
     }
 
 
-
     def "create temp file"() {
         when:
         def tempFile = FileGroup
-                .list(tempDir, 'foo' )
+                .list(tempDir, 'foo')
                 .createTempFile()
 
         then:
@@ -304,7 +308,7 @@ class FileGroupTest extends Specification {
     def "delete old temp file"() {
         given:
         def fileGroup = FileGroup
-                .list(tempDir, 'foo' )
+                .list(tempDir, 'foo')
         def staleTempFile = fileGroup.createTempFile()
         staleTempFile.write('irgendwas bli bla blo')
 
@@ -321,5 +325,17 @@ class FileGroupTest extends Specification {
 
         then:
         !fileGroupToString.contains('@')
+    }
+
+    private static PermaFile toDeltaFile(PermaFile fullFile, String deltaFile) {
+        toDeltaFiles(fullFile, [deltaFile])[0]
+    }
+
+    private static ImmutableList<PermaFile> toDeltaFiles(PermaFile fullFile, List<String> deltaFileName) {
+        fullFile.deltaFileNamePattern().parse(deltaFileName as String[])
+    }
+
+    private PermaFile toFullFile(String permaName, String fullFileName) {
+        new FullFilePattern(permaName).parse(tempDir, fullFileName)
     }
 }

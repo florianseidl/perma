@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,12 +32,12 @@ public class FullFilePattern implements FilenameFilter {
         this.pattern = Pattern.compile(String.format(FULL_FILE_NAME_PATTERN_TEMPLATE, permaName));
     }
 
-    public FileName parse(String fileName) {
+    public PermaFile parse(File dir, String fileName) {
         Matcher matcher = pattern.matcher(fileName);
         Preconditions.checkArgument(
                 matcher.find(),
                 String.format("Invalid file name %s", fileName));
-        return FileName.fullFile(compressionOf(fileName), permaName, parseFileNumber(matcher));
+        return PermaFile.fullFile(compressionOf(fileName), dir, permaName, parseFileNumber(matcher));
     }
 
     @Override

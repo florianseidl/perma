@@ -5,6 +5,7 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.MapFileData;
+import ch.sbb.perma.file.PermaFile;
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -54,7 +55,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
         this.valueSerializer = valueSerializer;
     }
 
-    static <K,V> MapSnapshot<K,V> load(String name,
+    static <K,V> MapSnapshot<K,V> load(String permaName,
                                        FileGroup latestFiles,
                                        Options options,
                                        KeyOrValueSerializer<K> keySerializer,
@@ -66,10 +67,9 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                 latestFiles.deltaFiles(),
                 keySerializer,
                 valueSerializer,
-                latestFiles.compression(),
                 collector);
         return new PersistedMapSnapshot<>(
-                name,
+                permaName,
                 latestFiles,
                 options,
                 ImmutableMap.copyOf(collector),
@@ -84,7 +84,6 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
     }
 
     private MapSnapshot<K,V> writeNext(ImmutableMap<K,V> currentImmutable) throws IOException {
-        FileGroup filesWithNextDeltaFile = files.withNextDelta();
         MapDifference<K,V> diff = Maps.difference(mapSnapshot, currentImmutable);
         if(diff.areEqual()) {
             LOG.debug("Noting to write (no changes detected), ignoring");
@@ -94,11 +93,11 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
             LOG.debug("More than a third of the records are added and/or deleted, compacting to full file");
             return compactTo(currentImmutable);
         }
+        FileGroup filesWithNextDeltaFile = files.withNextDelta();
         LOG.debug("Writing delta to file {} after deleting stale temp files", filesWithNextDeltaFile.latestDeltaFile());
         filesWithNextDeltaFile.deleteStaleTempFiles();
         MapFileData<K,V> nextDeltaData = toDelta(diff).writeTo(
                                                 filesWithNextDeltaFile.latestDeltaFile(),
-                                                filesWithNextDeltaFile.createTempFile(),
                                                 keySerializer,
                                                 valueSerializer);
         return new PersistedMapSnapshot<>(
@@ -123,7 +122,7 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
             LOG.debug("Reloading instead of refresh, full file has changed");
             return load(name, refreshedFiles, options, keySerializer, valueSerializer);
         }
-        List<File> additionalDeltaFiles = refreshedFiles.deltaFilesSince(files);
+        List<PermaFile> additionalDeltaFiles = refreshedFiles.deltaFilesSince(files);
         if(additionalDeltaFiles.isEmpty()) {
             LOG.debug("No new files found, cancelling refresh");
             return this;

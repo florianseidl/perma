@@ -56,9 +56,8 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
                 newFullFileGroup.fullFile());
         newFullFileGroup.deleteStaleTempFiles();
         MapFileData<K,V> fullData = MapFileData
-                                .createNewFull(name, options.compression(), currentImmutable)
+                                .createNewFull(name, currentImmutable)
                                 .writeTo(newFullFileGroup.fullFile(),
-                                        newFullFileGroup.createTempFile(),
                                         keySerializer,
                                         valueSerializer);
         return new PersistedMapSnapshot<>(
