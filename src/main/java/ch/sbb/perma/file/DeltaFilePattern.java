@@ -13,7 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public class DeltaFilePattern implements FilenameFilter {
+public class DeltaFilePattern {
 
     private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma(\\.gzip)?";
     private final PermaFile fullFileName;
@@ -24,14 +24,15 @@ public class DeltaFilePattern implements FilenameFilter {
         this.pattern = Pattern.compile(String.format(DELTA_FILE_NAME_PATTERN_TEMPLATE, permaName, fullFileNumber));
     }
 
-    public ImmutableList<PermaFile> parse(String[] fileNames) {
-        return Stream.of(fileNames).map(this::parse)
+    public ImmutableList<PermaFile> listDeltaFiles(File dir) {
+        return new Directory(dir).listDir(this::accept)
+                .stream()
+                .map(this::parse)
                 .sorted()
                 .collect(ImmutableList.toImmutableList());
     }
 
-    @Override
-    public boolean accept(File dir, String name) {
+    private boolean accept(File dir, String name) {
         return pattern.matcher(name).matches();
     }
 

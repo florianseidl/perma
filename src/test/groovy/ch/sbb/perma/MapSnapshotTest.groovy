@@ -395,15 +395,24 @@ class MapSnapshotTest extends Specification {
                 Options.defaults(),
                 STRING,
                 STRING)
-        def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
-        oldTemp.write('irgendwas')
+        def oldTemp = FileGroup
+                .list(tempDir, 'foo')
+                .withNextFull(new NoCompression())
+                .fullFile()
+                .tempFile()
+        def out = oldTemp.outputStream()
+        out.with {
+            it.write('irgendwas'.bytes)
+        }
+        out.close()
 
         when:
+        assert toFile(oldTemp).exists()
         newSnapshot.writeNext(['A':VALUE_A] )
 
         then:
         FileGroup.list(tempDir, 'foo').exists()
-        !oldTemp.exists()
+        !toFile(oldTemp).exists()
     }
 
     def "delete tempfile on writeNext PersistedMapSnapshot"() {
@@ -415,15 +424,19 @@ class MapSnapshotTest extends Specification {
                 STRING,
                 STRING)
         def persistedSnapshot = newSnapshot.writeNext(['A':VALUE_A] )
-        def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
-        oldTemp.write('irgendwas')
+        def oldTemp = FileGroup.list(tempDir, 'foo').fullFile().tempFile()
+        def out = oldTemp.outputStream()
+        out.with {
+            it.write('irgendwas'.bytes)
+        }
+        out.close()
 
         when:
         persistedSnapshot.writeNext(['A':VALUE_A, 'B': VALUE_B] )
 
         then:
         FileGroup.list(tempDir, 'foo').exists()
-        !oldTemp.exists()
+        !toFile(oldTemp).exists()
     }
 
     @Unroll
@@ -443,7 +456,7 @@ class MapSnapshotTest extends Specification {
         then:
         next.asImmutableMap().equals(map)
         fileGroup.exists()
-        fileGroup.compression().class == compression
+        fileGroup.fullFile().compression().class == compression
 
 
         where:
@@ -452,12 +465,11 @@ class MapSnapshotTest extends Specification {
         ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | Options.compressed() | GZipCompression.class
     }
 
-
     def rename(PermaFile source, PermaFile target) {
         toFile(source).renameTo(toFile(target))
     }
 
-    File toFile(PermaFile permaFile) {
+    File toFile(def permaFile) {
         return new File(permaFile.toString())
     }
 }

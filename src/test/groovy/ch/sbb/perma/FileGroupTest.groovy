@@ -4,13 +4,9 @@
 
 package ch.sbb.perma
 
-import ch.sbb.perma.datastore.Compression
 import ch.sbb.perma.datastore.GZipCompression
 import ch.sbb.perma.datastore.NoCompression
-import ch.sbb.perma.file.DeltaFilePattern
-import ch.sbb.perma.file.FullFilePattern
 import ch.sbb.perma.file.PermaFile
-import com.google.common.collect.ImmutableList
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -36,8 +32,8 @@ class FileGroupTest extends Specification {
         def latest = FileGroup.list(tempDir, permaName)
 
         then:
-        latest.fullFile() == toFullFile(permaName, latestFullFile)
-        latest.deltaFiles() == toDeltaFiles(latest.fullFile(), latestDeltaFiles)
+        hasName(latest.fullFile(), latestFullFile)
+        hasNames(latest.deltaFiles(), latestDeltaFiles)
 
         where:
         files                                                | permaName || latestFullFile  | latestDeltaFiles
@@ -86,8 +82,8 @@ class FileGroupTest extends Specification {
         def latest = FileGroup.list(tempDir, 'foo')
 
         then:
-        latest.fullFile() == toFullFile('foo', latestFullFile)
-        latest.deltaFiles() == toDeltaFiles(latest.fullFile(), latestDeltaFiles)
+        hasName(latest.fullFile(), latestFullFile)
+        hasNames(latest.deltaFiles(), latestDeltaFiles)
 
         where:
         files                                        || latestFullFile       | latestDeltaFiles
@@ -119,7 +115,7 @@ class FileGroupTest extends Specification {
                 .latestDeltaFile()
 
         then:
-        nextDeltaFile == toDeltaFile(fileGroup.fullFile(), expectedNextDeltaFile)
+        hasName(nextDeltaFile, expectedNextDeltaFile)
 
         where:
         files                               || expectedNextDeltaFile
@@ -143,10 +139,10 @@ class FileGroupTest extends Specification {
                 .fullFile()
 
         then:
-        nextFullFile == toFullFile('foo', nextFullFileName);
+        hasName(nextFullFile, expectedNextFullFile)
 
         where:
-        files                               | compression           || nextFullFileName
+        files                               | compression           || expectedNextFullFile
         ['foo_1_0.perma']                   | new NoCompression()   || 'foo_2_0.perma'
         ['foo_1_0.perma', 'foo_7_0.perma']  | new NoCompression()   || 'foo_8_0.perma'
         ['foo_1_0.perma', 'foo_1_43.perma'] | new NoCompression()   || 'foo_2_0.perma'
@@ -202,7 +198,7 @@ class FileGroupTest extends Specification {
         def deltaFilesSince = filesNow.deltaFilesSince(filesBefore)
 
         then:
-        deltaFilesSince == toDeltaFiles(filesNow.fullFile(), expectedDeltaFilesSince)
+        hasNames(deltaFilesSince, expectedDeltaFilesSince)
 
         where:
         filesToWriteBefore                 | filesToWriteNow                                     || expectedDeltaFilesSince
@@ -228,7 +224,7 @@ class FileGroupTest extends Specification {
                 .delete()
 
         then:
-        tempDir.list() == remaining
+        tempDir.list() == remaining as String[]
 
         where:
         files                              || remaining
@@ -275,7 +271,7 @@ class FileGroupTest extends Specification {
         }
 
         when:
-        def compression = FileGroup.list(tempDir, 'foo').compression()
+        def compression = FileGroup.list(tempDir, 'foo').fullFile().compression()
 
         then:
         compression.class == expectedCompression
@@ -297,11 +293,13 @@ class FileGroupTest extends Specification {
         when:
         def tempFile = FileGroup
                 .list(tempDir, 'foo')
-                .createTempFile()
+                .withNextFull(new NoCompression())
+                .fullFile()
+                .tempFile()
 
         then:
-        tempFile.getName().startsWith('foo')
-        tempFile.getName().endsWith('perma.temp')
+        nameOf(tempFile).startsWith('foo')
+        nameOf(tempFile).endsWith('perma.temp')
     }
 
 
@@ -309,14 +307,22 @@ class FileGroupTest extends Specification {
         given:
         def fileGroup = FileGroup
                 .list(tempDir, 'foo')
-        def staleTempFile = fileGroup.createTempFile()
-        staleTempFile.write('irgendwas bli bla blo')
+        def staleTempFile = fileGroup
+                .withNextFull(new NoCompression())
+                .fullFile()
+                .tempFile()
+        def stream = staleTempFile.outputStream()
+        stream.write('irgendwas bli bla blo'.bytes)
+        stream.close()
+        if(!new File(staleTempFile.toString()).exists()) {
+            throw new IllegalStateException()
+        }
 
         when:
         fileGroup.deleteStaleTempFiles()
 
         then:
-        !staleTempFile.exists()
+        !new File(staleTempFile.toString()).exists()
     }
 
     def toStringIsImplemented() {
@@ -327,15 +333,15 @@ class FileGroupTest extends Specification {
         !fileGroupToString.contains('@')
     }
 
-    private static PermaFile toDeltaFile(PermaFile fullFile, String deltaFile) {
-        toDeltaFiles(fullFile, [deltaFile])[0]
+    private static boolean hasName(PermaFile file, String name) {
+        return nameOf(file).equals(name)
     }
 
-    private static ImmutableList<PermaFile> toDeltaFiles(PermaFile fullFile, List<String> deltaFileName) {
-        fullFile.deltaFileNamePattern().parse(deltaFileName as String[])
+    private static boolean hasNames(List<PermaFile> files, List<String> names) {
+        return files.collect{nameOf(it)}.equals(names)
     }
 
-    private PermaFile toFullFile(String permaName, String fullFileName) {
-        new FullFilePattern(permaName).parse(tempDir, fullFileName)
+    private static String nameOf(def permaOrTempFile) {
+        return new File(permaOrTempFile.toString()).name
     }
 }

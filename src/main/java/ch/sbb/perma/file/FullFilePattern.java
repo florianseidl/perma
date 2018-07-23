@@ -11,6 +11,9 @@ import com.google.common.base.Preconditions;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +23,7 @@ import java.util.regex.Pattern;
  * @author u206123 (Florian Seidl)
  * @since 6.2, 2018.
  */
-public class FullFilePattern implements FilenameFilter {
+public class FullFilePattern {
     private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma(\\.gzip)?";
     private final static Pattern GZIP_FILE_NAME_PATTERN = Pattern.compile(".*\\.perma\\.gzip");
 
@@ -32,6 +35,14 @@ public class FullFilePattern implements FilenameFilter {
         this.pattern = Pattern.compile(String.format(FULL_FILE_NAME_PATTERN_TEMPLATE, permaName));
     }
 
+    public Optional<PermaFile> latestFullFile(File dir) {
+        return new Directory(dir)
+                .listDir(this::accept)
+                .stream()
+                .map(fileName -> parse(dir, fileName))
+                .max(Comparator.naturalOrder());
+    }
+
     public PermaFile parse(File dir, String fileName) {
         Matcher matcher = pattern.matcher(fileName);
         Preconditions.checkArgument(
@@ -40,8 +51,8 @@ public class FullFilePattern implements FilenameFilter {
         return PermaFile.fullFile(compressionOf(fileName), dir, permaName, parseFileNumber(matcher));
     }
 
-    @Override
-    public boolean accept(File dir, String name) {
+
+    private boolean accept(File dir, String name) {
         return pattern.matcher(name).matches();
     }
 

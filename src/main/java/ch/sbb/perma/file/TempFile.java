@@ -7,24 +7,32 @@ package ch.sbb.perma.file;
 import ch.sbb.perma.FileRenameException;
 import ch.sbb.perma.datastore.Compression;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.UUID;
 
 public class TempFile {
     private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
-    private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
+    private final static String TEMP_FILE_PATTERN_TEMPLATE =
+            String.format(
+                    TEMP_FILE_FORMAT
+                            .replace(".", "\\.")
+                            .replace("-", "\\-"),
+                    "%s", ".+");
 
     private final File targetFile;
     private final Compression compression;
     private final File file;
 
-    public TempFile(File targetFile, Compression compression, File file) {
+    private TempFile(File targetFile, Compression compression, File file) {
         this.targetFile = targetFile;
         this.compression = compression;
         this.file = file;
     }
 
-    static TempFile create(File targetFile, Compression compression, File dir, String permaName) {
+    public static TempFile create(File targetFile, Compression compression, File dir, String permaName) {
         return new TempFile(
                 targetFile,
                 compression,
@@ -46,4 +54,14 @@ public class TempFile {
         }
     }
 
+    public static void deleteStaleTempFiles(File dir, String permaName) {
+        String pattern = String.format(TEMP_FILE_PATTERN_TEMPLATE, permaName);
+        new Directory(dir).listDir((d, fileName) -> fileName.matches(pattern))
+                .forEach(fileName -> new File(dir, fileName).delete());
+    }
+
+    @Override
+    public String toString() {
+        return file.toString();
+    }
 }
