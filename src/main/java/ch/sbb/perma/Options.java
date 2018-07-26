@@ -7,6 +7,7 @@ package ch.sbb.perma;
 import ch.sbb.perma.datastore.Compression;
 import ch.sbb.perma.datastore.GZipCompression;
 import ch.sbb.perma.datastore.NoCompression;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 /**
@@ -76,5 +77,14 @@ public class Options {
             return new GZipCompression();
         }
         return new NoCompression();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects
+                .toStringHelper(this)
+                .add("compress", compress)
+                .add("compactThresholdPercent", compactThresholdPercent)
+                .toString();
     }
 }

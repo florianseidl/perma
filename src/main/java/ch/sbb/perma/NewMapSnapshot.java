@@ -54,7 +54,6 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
         LOG.debug("Writing full file with mapSize={} to file {} after deleting stale temp files",
                 currentImmutable.size(),
                 newFullFileGroup.fullFile());
-        newFullFileGroup.deleteStaleTempFiles();
         MapFileData<K,V> fullData = MapFileData
                                 .createNewFull(name, currentImmutable)
                                 .writeTo(newFullFileGroup.fullFile(),

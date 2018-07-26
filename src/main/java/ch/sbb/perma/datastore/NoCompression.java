@@ -23,7 +23,7 @@ public class NoCompression implements Compression {
     }
 
     @Override
-    public InputStream deflate(InputStream in) {
+    public InputStream decompress(InputStream in) {
         return in;
     }
 

@@ -13,7 +13,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * Compress or deflate GZip files.
+ * Compress or decompress GZip files.
  *
  * @author u206123 (Florian Seidl)
  * @since 6.2, 2018.
@@ -26,7 +26,7 @@ public class GZipCompression implements Compression {
     }
 
     @Override
-    public InputStream deflate(InputStream in) throws IOException {
+    public InputStream decompress(InputStream in) throws IOException {
         return new GZIPInputStream(in);
     }
 

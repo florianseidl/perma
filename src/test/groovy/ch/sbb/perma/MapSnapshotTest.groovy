@@ -387,58 +387,6 @@ class MapSnapshotTest extends Specification {
         null           | STRING
     }
 
-    def "delete tempfile on writeNext NewMapSnapshot"() {
-        given:
-        def newSnapshot = new NewMapSnapshot(
-                'foo',
-                FileGroup.list(tempDir, 'foo'),
-                Options.defaults(),
-                STRING,
-                STRING)
-        def oldTemp = FileGroup
-                .list(tempDir, 'foo')
-                .withNextFull(new NoCompression())
-                .fullFile()
-                .tempFile()
-        def out = oldTemp.outputStream()
-        out.with {
-            it.write('irgendwas'.bytes)
-        }
-        out.close()
-
-        when:
-        assert toFile(oldTemp).exists()
-        newSnapshot.writeNext(['A':VALUE_A] )
-
-        then:
-        FileGroup.list(tempDir, 'foo').exists()
-        !toFile(oldTemp).exists()
-    }
-
-    def "delete tempfile on writeNext PersistedMapSnapshot"() {
-        given:
-        def newSnapshot = new NewMapSnapshot(
-                'foo',
-                FileGroup.list(tempDir, 'foo'),
-                Options.defaults(),
-                STRING,
-                STRING)
-        def persistedSnapshot = newSnapshot.writeNext(['A':VALUE_A] )
-        def oldTemp = FileGroup.list(tempDir, 'foo').fullFile().tempFile()
-        def out = oldTemp.outputStream()
-        out.with {
-            it.write('irgendwas'.bytes)
-        }
-        out.close()
-
-        when:
-        persistedSnapshot.writeNext(['A':VALUE_A, 'B': VALUE_B] )
-
-        then:
-        FileGroup.list(tempDir, 'foo').exists()
-        !toFile(oldTemp).exists()
-    }
-
     @Unroll
     def "next from new snapshot #map.keySet() options #options"() {
         given:

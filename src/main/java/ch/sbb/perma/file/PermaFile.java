@@ -50,12 +50,18 @@ public final class PermaFile implements Comparable<PermaFile> {
         return compression;
     }
 
-    public InputStream inputStream() throws IOException {
-        return compression.deflate(new FileInputStream(toFile()));
+    public <R> R withInputStream(IOFunction<InputStream, R> function) throws IOException {
+        try(InputStream in = compression.decompress(new FileInputStream(toFile()))) {
+            return function.apply(in);
+        }
     }
 
-    public TempFile tempFile() {
-        return TempFile.create(toFile(), compression, dir, permaName);
+    public <R> R withOutputStream(IOFunction<OutputStream, R> function) throws IOException {
+        TempFile tempFile = new TempFile(dir, permaName);
+        tempFile.deleteStaleTempFiles();
+        R retval = tempFile.withOutputStream(out -> function.apply(compression.compress(out)));
+        tempFile.moveTo(toFile());
+        return retval;
     }
 
     public boolean delete() {

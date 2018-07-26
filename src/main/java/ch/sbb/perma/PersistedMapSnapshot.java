@@ -14,7 +14,6 @@ import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -95,7 +94,6 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
         }
         FileGroup filesWithNextDeltaFile = files.withNextDelta();
         LOG.debug("Writing delta to file {} after deleting stale temp files", filesWithNextDeltaFile.latestDeltaFile());
-        filesWithNextDeltaFile.deleteStaleTempFiles();
         MapFileData<K,V> nextDeltaData = toDelta(diff).writeTo(
                                                 filesWithNextDeltaFile.latestDeltaFile(),
                                                 keySerializer,

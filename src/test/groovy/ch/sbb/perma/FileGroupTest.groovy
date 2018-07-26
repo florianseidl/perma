@@ -7,19 +7,9 @@ package ch.sbb.perma
 import ch.sbb.perma.datastore.GZipCompression
 import ch.sbb.perma.datastore.NoCompression
 import ch.sbb.perma.file.PermaFile
-import spock.lang.Specification
 import spock.lang.Unroll
 
-class FileGroupTest extends Specification {
-    File tempDir
-
-    def setup() {
-        tempDir = File.createTempDir()
-    }
-
-    def cleanup() {
-        tempDir.deleteDir()
-    }
+class FileGroupTest extends SpecificationWithTempDir {
 
     @Unroll
     def "latest file #files"() {
@@ -286,43 +276,6 @@ class FileGroupTest extends Specification {
         ['foo_1_0.perma', 'foo_1_1.perma',
          'foo_2_0.perma.gzip']                  || GZipCompression.class
         ['foo_1_0.perma', 'foo_1_1.perma.gzip'] || NoCompression.class // invalid szenario
-    }
-
-
-    def "create temp file"() {
-        when:
-        def tempFile = FileGroup
-                .list(tempDir, 'foo')
-                .withNextFull(new NoCompression())
-                .fullFile()
-                .tempFile()
-
-        then:
-        nameOf(tempFile).startsWith('foo')
-        nameOf(tempFile).endsWith('perma.temp')
-    }
-
-
-    def "delete old temp file"() {
-        given:
-        def fileGroup = FileGroup
-                .list(tempDir, 'foo')
-        def staleTempFile = fileGroup
-                .withNextFull(new NoCompression())
-                .fullFile()
-                .tempFile()
-        def stream = staleTempFile.outputStream()
-        stream.write('irgendwas bli bla blo'.bytes)
-        stream.close()
-        if(!new File(staleTempFile.toString()).exists()) {
-            throw new IllegalStateException()
-        }
-
-        when:
-        fileGroup.deleteStaleTempFiles()
-
-        then:
-        !new File(staleTempFile.toString()).exists()
     }
 
     def toStringIsImplemented() {

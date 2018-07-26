@@ -4,9 +4,7 @@
 
 package ch.sbb.perma.datastore;
 
-import ch.sbb.perma.FileRenameException;
 import ch.sbb.perma.file.PermaFile;
-import ch.sbb.perma.file.TempFile;
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import ch.sbb.perma.serializers.NullValueSerializer;
 import com.google.common.collect.ImmutableMap;
@@ -87,9 +85,7 @@ public class MapFileData<K,V> {
     private static <K,V> MapFileData<K,V> readFrom(PermaFile file,
                                                    KeyOrValueSerializer<K> keySerializer,
                                                    KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        try (InputStream in = file.inputStream()) {
-            return readFrom(in, keySerializer, valueSerializer);
-        }
+        return file.withInputStream(in -> readFrom(in, keySerializer, valueSerializer));
     }
 
     static <K,V> MapFileData<K,V> readFrom(InputStream input,
@@ -129,18 +125,7 @@ public class MapFileData<K,V> {
     public MapFileData<K,V> writeTo(PermaFile targetFile,
                                     KeyOrValueSerializer<K> keySerializer,
                                     KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        TempFile tempFile = targetFile.tempFile();
-        MapFileData<K,V> mapFileData = writeToTempFile(tempFile, keySerializer, valueSerializer);
-        tempFile.moveToTarget();
-        return mapFileData;
-    }
-
-    private MapFileData<K,V> writeToTempFile(TempFile tempFile,
-                                             KeyOrValueSerializer<K> keySerializer,
-                                             KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        try (OutputStream out = tempFile.outputStream()) {
-            return writeTo(out, keySerializer, valueSerializer);
-        }
+        return targetFile.withOutputStream(out -> writeTo(out, keySerializer, valueSerializer));
     }
 
     MapFileData<K,V> writeTo(OutputStream output,

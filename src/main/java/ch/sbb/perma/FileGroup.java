@@ -5,16 +5,15 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.datastore.Compression;
-import ch.sbb.perma.file.PermaFile;
 import ch.sbb.perma.file.FullFilePattern;
-import ch.sbb.perma.file.TempFile;
+import ch.sbb.perma.file.PermaFile;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Writable files in a directory. Can List, create new files,...
@@ -130,10 +129,6 @@ class FileGroup {
             deleted = deleted || deletedDelta;
         }
         return deleted;
-    }
-
-    public void deleteStaleTempFiles() {
-        TempFile.deleteStaleTempFiles(dir, permaName);
     }
 
     @Override
