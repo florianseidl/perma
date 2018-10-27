@@ -27,7 +27,7 @@ public class Options {
         private Builder() {
         }
 
-        public Builder compress(boolean compress) {
+        Builder compress(boolean compress) {
             this.compress = compress;
             return this;
         }
@@ -50,10 +50,6 @@ public class Options {
     private Options(boolean compress, int compactThresholdPercent) {
         this.compress = compress;
         this.compactThresholdPercent = compactThresholdPercent;
-    }
-
-    public static Builder builder() {
-        return new Builder();
     }
 
     public static Options compressed() {

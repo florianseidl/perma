@@ -16,7 +16,7 @@ package ch.sbb.perma.datastore;
  * @since 1.0, 2017.
  */
 public class InvalidDataException extends PermaDatastoreException {
-    public InvalidDataException(String s) {
+    InvalidDataException(String s) {
         super(s);
     }
 }

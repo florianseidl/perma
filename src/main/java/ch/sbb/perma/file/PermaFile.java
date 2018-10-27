@@ -29,15 +29,15 @@ public final class PermaFile implements Comparable<PermaFile> {
         return new PermaFile(compression, dir, permaName, fullFileNumber, 0);
     }
 
-    public DeltaFilePattern deltaFileNamePattern() {
+    DeltaFilePattern deltaFileNamePattern() {
         return new DeltaFilePattern(this, permaName, fullFileNumber);
     }
 
-    public PermaFile nextDelta() {
+    PermaFile nextDelta() {
         return new PermaFile(compression, dir, permaName, fullFileNumber, deltaFileNumber + 1);
     }
 
-    public PermaFile nextFull(Compression compression) {
+    PermaFile nextFull(Compression compression) {
         return fullFile(compression, dir, permaName, fullFileNumber + 1);
     }
 

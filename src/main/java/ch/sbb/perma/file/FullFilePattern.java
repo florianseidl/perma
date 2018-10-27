@@ -18,19 +18,19 @@ import java.util.regex.Pattern;
  * @author u206123 (Florian Seidl)
  * @since 6.2, 2018.
  */
-public class FullFilePattern {
+class FullFilePattern {
     private final static String FULL_FILE_NAME_PATTERN_TEMPLATE = "%s_(\\d+)_0\\.perma(\\.gzip)?";
     private final static Pattern GZIP_FILE_NAME_PATTERN = Pattern.compile(".*\\.perma\\.gzip");
 
     private final Pattern pattern;
     private final String permaName;
 
-    public FullFilePattern(String permaName) {
+    FullFilePattern(String permaName) {
         this.permaName = permaName;
         this.pattern = Pattern.compile(String.format(FULL_FILE_NAME_PATTERN_TEMPLATE, permaName));
     }
 
-    public Optional<PermaFile> latestFullFile(File dir) {
+    Optional<PermaFile> latestFullFile(File dir) {
         return new Directory(dir)
                 .listDir(this::accept)
                 .stream()
@@ -45,7 +45,6 @@ public class FullFilePattern {
                 String.format("Invalid file name %s", fileName));
         return PermaFile.fullFile(compressionOf(fileName), dir, permaName, parseFileNumber(matcher));
     }
-
 
     private boolean accept(File dir, String name) {
         return pattern.matcher(name).matches();

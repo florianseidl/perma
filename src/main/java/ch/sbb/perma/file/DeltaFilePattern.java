@@ -8,12 +8,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
-public class DeltaFilePattern {
+class DeltaFilePattern {
 
     private final static String DELTA_FILE_NAME_PATTERN_TEMPLATE = "%s_%d_([1-9]\\d*)\\.perma(\\.gzip)?";
     private final PermaFile fullFileName;
@@ -24,7 +22,7 @@ public class DeltaFilePattern {
         this.pattern = Pattern.compile(String.format(DELTA_FILE_NAME_PATTERN_TEMPLATE, permaName, fullFileNumber));
     }
 
-    public ImmutableList<PermaFile> listDeltaFiles(File dir) {
+    ImmutableList<PermaFile> listDeltaFiles(File dir) {
         return new Directory(dir).listDir(this::accept)
                 .stream()
                 .map(this::parse)
