@@ -4,9 +4,10 @@
 
 package ch.sbb.perma
 
-import ch.sbb.perma.datastore.GZipCompression
 import ch.sbb.perma.datastore.HeaderMismatchException
-import ch.sbb.perma.datastore.NoCompression
+import ch.sbb.perma.file.FileGroup
+import ch.sbb.perma.file.GZipCompression
+import ch.sbb.perma.file.NoCompression
 import ch.sbb.perma.file.PermaFile
 import ch.sbb.perma.serializers.KeyOrValueSerializer
 import spock.lang.Specification

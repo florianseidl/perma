@@ -4,6 +4,7 @@
 
 package ch.sbb.perma;
 
+import ch.sbb.perma.file.FileGroup;
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ImmutableMap;
 

@@ -4,7 +4,6 @@
 
 package ch.sbb.perma.file;
 
-import ch.sbb.perma.datastore.Compression;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 

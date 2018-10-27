@@ -1,12 +1,9 @@
 /*
- * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
+ * Copyright (C) Schweizerische Bundesbahnen SBB, 2018.
  */
 
-package ch.sbb.perma;
+package ch.sbb.perma.file;
 
-import ch.sbb.perma.datastore.Compression;
-import ch.sbb.perma.file.FullFilePattern;
-import ch.sbb.perma.file.PermaFile;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
@@ -21,10 +18,7 @@ import java.util.Objects;
  * @author u206123 (Florian Seidl)
  * @since 1.0, 2017.
  */
-class FileGroup {
-    private final static String TEMP_FILE_FORMAT = "%s-%s.perma.temp";
-    private final static String TEMP_FILE_PATTERN_TEMPLATE = String.format(TEMP_FILE_FORMAT, "%s", ".+");
-
+public class FileGroup {
     private final File dir;
     private final String permaName;
     private final PermaFile fullFile;
@@ -50,7 +44,7 @@ class FileGroup {
         return list(dir, permaName);
     }
 
-    boolean exists() {
+    public boolean exists() {
         return fullFile != null;
     }
 

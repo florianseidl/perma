@@ -4,6 +4,8 @@
 
 package ch.sbb.perma.datastore
 
+import ch.sbb.perma.file.GZipCompression
+import ch.sbb.perma.file.NoCompression
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import spock.lang.Specification

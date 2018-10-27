@@ -13,11 +13,11 @@ import java.util.List;
 class Directory {
     private final File dir;
 
-    public Directory(File dir) {
+    Directory(File dir) {
         this.dir = dir;
     }
 
-    public List<String> listDir(FilenameFilter filenameFilter) {
+    List<String> listDir(FilenameFilter filenameFilter) {
         String[] list = dir.list(filenameFilter);
         return list != null ? Arrays.asList(list) : Collections.emptyList();
     }

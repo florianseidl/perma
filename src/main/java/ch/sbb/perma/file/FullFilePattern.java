@@ -4,14 +4,9 @@
 
 package ch.sbb.perma.file;
 
-import ch.sbb.perma.datastore.Compression;
-import ch.sbb.perma.datastore.GZipCompression;
-import ch.sbb.perma.datastore.NoCompression;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
-import java.io.FilenameFilter;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -43,7 +38,7 @@ public class FullFilePattern {
                 .max(Comparator.naturalOrder());
     }
 
-    public PermaFile parse(File dir, String fileName) {
+    private PermaFile parse(File dir, String fileName) {
         Matcher matcher = pattern.matcher(fileName);
         Preconditions.checkArgument(
                 matcher.find(),

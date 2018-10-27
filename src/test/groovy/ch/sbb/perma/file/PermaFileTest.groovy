@@ -5,7 +5,6 @@
 package ch.sbb.perma.file
 
 import ch.sbb.perma.SpecificationWithTempDir
-import ch.sbb.perma.datastore.NoCompression
 
 class PermaFileTest extends SpecificationWithTempDir {
     def "write"() {

@@ -1,12 +1,10 @@
 /*
- * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
+ * Copyright (C) Schweizerische Bundesbahnen SBB, 2018.
  */
 
-package ch.sbb.perma
+package ch.sbb.perma.file
 
-import ch.sbb.perma.datastore.GZipCompression
-import ch.sbb.perma.datastore.NoCompression
-import ch.sbb.perma.file.PermaFile
+import ch.sbb.perma.SpecificationWithTempDir
 import spock.lang.Unroll
 
 class FileGroupTest extends SpecificationWithTempDir {
