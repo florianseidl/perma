@@ -4,6 +4,7 @@
 
 package ch.sbb.perma.serializers;
 
+import com.google.common.base.Preconditions;
 import org.javatuples.Tuple;
 
 /**
@@ -36,11 +37,11 @@ public abstract class TupleSerializer<T extends Tuple> implements KeyOrValueSeri
     @SuppressWarnings("unchecked")
     private static byte[] toByteArray(KeyOrValueSerializer serializer, Object value) {
         byte[] bytes = serializer.toByteArray(value);
-        if(bytes == null) {
-            throw new IllegalArgumentException(String.format(
+        Preconditions.checkArgument(
+                bytes != null,
+                String.format(
                     "To Null Serializer is not allowed as value serializer in Tuple serializer: %s",
                     serializer.getClass().getSimpleName()));
-        }
         return bytes;
     }
 

@@ -4,6 +4,8 @@
 
 package ch.sbb.perma.datastore
 
+import ch.sbb.perma.file.GZipCompression
+import ch.sbb.perma.file.NoCompression
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import spock.lang.Specification
@@ -12,7 +14,6 @@ import spock.lang.Unroll
 import static ch.sbb.perma.serializers.KeyOrValueSerializer.STRING
 
 class MapFileDataTest extends Specification {
-    private static final UUID uuid = UUID.fromString("d4b89e8b-49d8-4c36-a798-942fb025a402");
     private static final String NAME = "testmap";
     private static String VALUE_A = 'value A'
     private static String VALUE_B = 'nix als bledsinn for value B'
@@ -31,8 +32,9 @@ class MapFileDataTest extends Specification {
 
         when:
         new MapFileData(Header.newFullHeader(NAME, 1),
-                    ImmutableMap.copyOf(['A': VALUE_A]),
-                    ImmutableSet.of())
+                ImmutableMap.copyOf(['A': VALUE_A]),
+                ImmutableSet.of()
+        )
                 .writeTo(out, STRING, STRING)
 
         then:
@@ -40,14 +42,15 @@ class MapFileDataTest extends Specification {
     }
 
     @Unroll
-    def "write read #map.keySet()"() {
+    def "write read #map.keySet() compression #compression"() {
         given:
         def out = new ByteArrayOutputStream();
 
         when:
         new MapFileData(Header.newFullHeader(NAME, map.size()),
-                    ImmutableMap.copyOf(map),
-                    ImmutableSet.of())
+                ImmutableMap.copyOf(map),
+                ImmutableSet.of()
+        )
                 .writeTo(out, STRING, STRING)
         def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
@@ -58,7 +61,8 @@ class MapFileDataTest extends Specification {
         extractMap(reread).equals(map)
 
         where:
-        map << [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B], [:], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]]
+        map << [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B], [:], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]] * 2
+        compression << [NoCompression.NO_COMPRESSION] * 4 + [GZipCompression.GZIP_COMPRESSION] * 4
     }
 
     @Unroll
@@ -68,8 +72,9 @@ class MapFileDataTest extends Specification {
 
         when:
         new MapFileData(Header.newFullHeader(NAME, 2),
-                    ImmutableMap.copyOf(['A':VALUE_A, 'B':VALUE_B]),
-                    ImmutableSet.of())
+                ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
+                ImmutableSet.of()
+        )
                 .writeTo(out, STRING, STRING)
         MapFileData.readFrom(
                 new ByteArrayInputStream(manipulate(out.toByteArray(),
@@ -96,9 +101,11 @@ class MapFileDataTest extends Specification {
         def out = new ByteArrayOutputStream();
 
         when:
-        new MapFileData(Header.newFullHeader(NAME, deleted.size()),
-                    ImmutableMap.of(),
-                    ImmutableSet.copyOf(deleted as Set))
+        new MapFileData(
+                Header.newFullHeader(NAME, deleted.size()),
+                ImmutableMap.of(),
+                ImmutableSet.copyOf(deleted as Set)
+        )
                 .writeTo(out, STRING, STRING)
         def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
@@ -124,8 +131,9 @@ class MapFileDataTest extends Specification {
 
         when:
         new MapFileData(Header.newFullHeader(NAME, newOrUpdated.size() + deleted.size()),
-                    ImmutableMap.copyOf(newOrUpdated),
-                    ImmutableSet.copyOf(deleted as Set))
+                ImmutableMap.copyOf(newOrUpdated),
+                ImmutableSet.copyOf(deleted as Set)
+        )
                 .writeTo(out, STRING, STRING)
         def reread = MapFileData.readFrom(
                 new ByteArrayInputStream(out.toByteArray()),
@@ -146,8 +154,9 @@ class MapFileDataTest extends Specification {
 
         when:
         new MapFileData(Header.newFullHeader(NAME, 1),
-                    ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
-                    ImmutableSet.of())
+                ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
+                ImmutableSet.of()
+        )
                 .writeTo(out, STRING, STRING)
 
         then:
@@ -161,7 +170,8 @@ class MapFileDataTest extends Specification {
         when:
         new MapFileData(Header.newFullHeader(NAME, 2),
                 ImmutableMap.copyOf(['A': VALUE_A, 'B': VALUE_B]),
-                ImmutableSet.of())
+                ImmutableSet.of()
+        )
                 .writeTo(out, STRING, STRING)
         def otherOut = new ByteArrayOutputStream()
         Header.newFullHeader(NAME, 1).writeTo(otherOut)
@@ -191,7 +201,8 @@ class MapFileDataTest extends Specification {
         def mapDataToString = new MapFileData(
                 Header.newFullHeader(NAME, 2),
                 ImmutableMap.of('A', VALUE_A),
-                ImmutableSet.of('C'))
+                ImmutableSet.of('C')
+        )
                 .toString();
 
         then:

@@ -49,7 +49,7 @@ class Header {
     private final int size;
     private final String name;
 
-    Header(FileType fileType, UUID fullFileUUID, int updateFileNumber, int size, String name) {
+    private Header(FileType fileType, UUID fullFileUUID, int updateFileNumber, int size, String name) {
         this.fileType = fileType;
         this.fullFileUUID = fullFileUUID;
         this.updateFileNumber = updateFileNumber;
@@ -65,7 +65,7 @@ class Header {
         return new Header(FileType.DELTA, this.fullFileUUID, this.updateFileNumber + 1, size, name);
     }
 
-    Header writeTo(OutputStream out) throws IOException {
+    void writeTo(OutputStream out) throws IOException {
         new BinaryWriter(out).write(FILE_MARKER);
         BinaryWriter writerWithChecksum = new BinaryWriter(out, new CRC32());
         writerWithChecksum.writeShort(VERSION);
@@ -76,7 +76,6 @@ class Header {
         writerWithChecksum.writeWithLength(STRING.toByteArray(name));
         writerWithChecksum.writeInt(size);
         writerWithChecksum.writeChecksum();
-        return this;
     }
 
     static Header readFrom(InputStream in) throws IOException {

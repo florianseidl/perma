@@ -5,6 +5,11 @@
 package ch.sbb.perma
 
 import ch.sbb.perma.datastore.HeaderMismatchException
+import ch.sbb.perma.file.FileGroup
+import ch.sbb.perma.file.GZipCompression
+import ch.sbb.perma.file.NoCompression
+import ch.sbb.perma.file.PermaFile
+import ch.sbb.perma.serializers.KeyOrValueSerializer
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -14,6 +19,7 @@ class MapSnapshotTest extends Specification {
     private static String VALUE_A = 'value A'
     private static String VALUE_B = 'nix als bledsinn for value B'
     private static String VALUE_C = 'immer wieder value C -'.multiply(99999)
+    private static int DEF_THRESHOLD = 34
 
     private File tempDir
 
@@ -30,6 +36,7 @@ class MapSnapshotTest extends Specification {
         def snapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -43,6 +50,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 keySerializer,
                 valueSerializer)
 
@@ -54,14 +62,13 @@ class MapSnapshotTest extends Specification {
         FileGroup.list(tempDir, 'foo').exists()
 
         where:
-        map                                     | keySerializer  | valueSerializer
-        ['A':VALUE_A]                           | STRING         | STRING
-        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | STRING         | STRING
-        ['foo':'bar']                           | STRING         | STRING
-        [666:42]                                | INTEGER        | INTEGER
-        [99999L : Long.MIN_VALUE]               | LONG           | LONG
+        map                                        | keySerializer | valueSerializer
+        ['A': VALUE_A]                             | STRING        | STRING
+        ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C] | STRING        | STRING
+        ['foo': 'bar']                             | STRING        | STRING
+        [666: 42]                                  | INTEGER       | INTEGER
+        [99999L: Long.MIN_VALUE]                   | LONG          | LONG
     }
-
 
     @Unroll
     def "next from persisted snapshot #map.keySet()"() {
@@ -69,6 +76,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 keySerializer,
                 valueSerializer)
 
@@ -80,13 +88,13 @@ class MapSnapshotTest extends Specification {
         overnext.asImmutableMap().equals(map)
 
         where:
-        map                                     | keySerializer | valueSerializer
-        ['A':VALUE_A]                           | STRING        | STRING
-        ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C] | STRING        | STRING
-        [:]                                     | STRING        | STRING
-        [3:'bar']                               | INTEGER       | STRING
-        ['bar':3]                               | STRING        | INTEGER
-        [99999L : Long.MIN_VALUE]               | LONG          | LONG
+        map                                        | keySerializer | valueSerializer
+        ['A': VALUE_A]                             | STRING        | STRING
+        ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C] | STRING        | STRING
+        [:]                                        | STRING        | STRING
+        [3: 'bar']                                 | INTEGER       | STRING
+        ['bar': 3]                                 | STRING        | INTEGER
+        [99999L: Long.MIN_VALUE]                   | LONG          | LONG
     }
 
     @Unroll
@@ -95,11 +103,12 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
         when:
-        for(def state : states) {
+        for (def state : states) {
             next = next.writeNext(state)
         }
 
@@ -107,30 +116,39 @@ class MapSnapshotTest extends Specification {
         next.asImmutableMap() == states[-1]
 
         where:
-        states << [[['A':VALUE_A]],
-                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]],
-                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A, 'C':VALUE_C]],
-                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A, 'C':VALUE_C], [:]],
-                   [[:],['A':VALUE_A, 'B':VALUE_B]]]
-        stateKeys = states.collect{it.keySet()}
+        states << [[['A': VALUE_A]],
+                   [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C]],
+                   [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_A, 'C': VALUE_C]],
+                   [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_A, 'C': VALUE_C], [:]],
+                   [[:], ['A': VALUE_A, 'B': VALUE_B]]]
+        stateKeys = states.collect { it.keySet() }
     }
 
     def "next from persisted snapshot delelete intermediate snapshot"() {
         given:
         def newSnapshot = new NewMapSnapshot(
-                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         when:
-        newSnapshot.writeNext(['A':VALUE_A])
-                    .writeNext(['A':VALUE_A, 'B':VALUE_B])
-                    .writeNext(['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C])
+        newSnapshot.writeNext(['A': VALUE_A])
+                .writeNext(['A': VALUE_A, 'B': VALUE_B])
+                .writeNext(['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C])
 
         def firstDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
         def secondDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[1]
         firstDelta.delete()
-        secondDelta.renameTo(firstDelta)
+        rename(secondDelta, firstDelta)
 
-        PersistedMapSnapshot.load('foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+        PersistedMapSnapshot.load(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -139,20 +157,33 @@ class MapSnapshotTest extends Specification {
     def "snapshot file from different full file"() {
         given:
         def newSnapshotFoo = new NewMapSnapshot(
-                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
         def newSnapshotBar = new NewMapSnapshot(
-                'bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
+                'bar',
+                FileGroup.list(tempDir, 'bar'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         when:
-        newSnapshotFoo.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C])
-        newSnapshotBar.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A,'C':VALUE_C]).writeNext(['A':VALUE_A,'C':VALUE_C, 'B':VALUE_B]);
+        newSnapshotFoo.writeNext(['A': VALUE_A]).writeNext(['A': VALUE_A, 'C': VALUE_C])
+        newSnapshotBar.writeNext(['A': VALUE_A]).writeNext(['A': VALUE_A, 'C': VALUE_C]).writeNext(['A': VALUE_A, 'C': VALUE_C, 'B': VALUE_B]);
 
-        File firstFooDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
-        File lastBarDelta = FileGroup.list(tempDir, 'bar').deltaFiles()[1]
+        PermaFile firstFooDelta = FileGroup.list(tempDir, 'foo').deltaFiles()[0]
+        PermaFile lastBarDelta = FileGroup.list(tempDir, 'bar').deltaFiles()[1]
         lastBarDelta.delete()
-        firstFooDelta.renameTo(lastBarDelta)
+        rename(firstFooDelta, lastBarDelta)
 
-        PersistedMapSnapshot.load('bar', FileGroup.list(tempDir, 'bar'), STRING, STRING)
+        PersistedMapSnapshot.load(
+                'bar',
+                FileGroup.list(tempDir, 'bar'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -161,17 +192,26 @@ class MapSnapshotTest extends Specification {
     def "not a full file"() {
         given:
         def newSnapshot = new NewMapSnapshot(
-                'foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         when:
-        newSnapshot.writeNext(['A':VALUE_A]).writeNext(['A':VALUE_A, 'B':VALUE_B])
+        newSnapshot.writeNext(['A': VALUE_A]).writeNext(['A': VALUE_A, 'B': VALUE_B])
 
         def files = FileGroup.list(tempDir, 'foo')
         def firstDelta = files.deltaFiles()[0]
         files.fullFile().delete()
-        firstDelta.renameTo(files.fullFile())
+        rename(firstDelta, files.fullFile())
 
-        PersistedMapSnapshot.load('foo', FileGroup.list(tempDir, 'foo'), STRING, STRING)
+        PersistedMapSnapshot.load(
+                'foo',
+                FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown HeaderMismatchException
@@ -182,7 +222,12 @@ class MapSnapshotTest extends Specification {
         def files = FileGroup.list(tempDir, 'foo')
 
         when:
-        PersistedMapSnapshot.load('foo', files, STRING, STRING)
+        PersistedMapSnapshot.load(
+                'foo',
+                files,
+                Options.defaults(),
+                STRING,
+                STRING)
 
         then:
         thrown FileNotFoundException
@@ -194,6 +239,7 @@ class MapSnapshotTest extends Specification {
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -209,8 +255,8 @@ class MapSnapshotTest extends Specification {
         fullFileExists == !map.isEmpty()
 
         where:
-        map << [['A':VALUE_A],
-                ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C],
+        map << [['A': VALUE_A],
+                ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C],
                 [:]]
     }
 
@@ -220,11 +266,12 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
         when:
-        for(def state : states) {
+        for (def state : states) {
             next = next.writeNext(state)
         }
         def compacted = next.compact()
@@ -238,11 +285,11 @@ class MapSnapshotTest extends Specification {
         deltaFilesAfterCompact == 0
 
         where:
-        states << [[['A':VALUE_A]],
-                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]],
-                   [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A, 'C':VALUE_C]],
-                   [[:],['A':VALUE_A, 'B':VALUE_B]]]
-        stateKeys = states.collect{ it.keySet() }
+        states << [[['A': VALUE_A]],
+                   [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C]],
+                   [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_A, 'C': VALUE_C]],
+                   [[:], ['A': VALUE_A, 'B': VALUE_B]]]
+        stateKeys = states.collect { it.keySet() }
     }
 
     def "no file ever persisted no compact no file empty"() {
@@ -250,6 +297,7 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
@@ -268,11 +316,12 @@ class MapSnapshotTest extends Specification {
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.defaults(),
                 STRING,
                 STRING)
 
         when:
-        for(def state : [['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C],[:]]) {
+        for (def state : [['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], [:]]) {
             next = next.writeNext(state)
         }
         def fullFileBeforeCompact = FileGroup.list(tempDir, 'foo').fullFile()
@@ -286,16 +335,17 @@ class MapSnapshotTest extends Specification {
     }
 
     @Unroll
-    def "autocompact #stateKeys"() {
+    def "autocompact #stateKeys #compactThreshold"() {
         given:
         def next = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
+                Options.builder().compress(false).compactThresholdPercent(compactThreshold).build(),
                 STRING,
                 STRING)
 
         when:
-        for(def state : states) {
+        for (def state : states) {
             next = next.writeNext(state)
         }
         def filesAfterCompact = FileGroup.list(tempDir, 'foo')
@@ -308,16 +358,21 @@ class MapSnapshotTest extends Specification {
         (deltaFilesAfterCompact == 0) == compacted
 
         where:
-        states                                                                  || compacted
-        [['A':VALUE_A],[:]]                                                     || true
-        [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C],[:]]            || true
-        [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A]] || true
-        [['A':VALUE_A, 'B':VALUE_B],['A':VALUE_A]]                              || true
-        [['A':VALUE_A],['A':VALUE_A, 'B':VALUE_B]]                              || false
-        [['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_A,'B':VALUE_B]]    || false
-        [['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C], ['A':VALUE_B,'B':VALUE_C]]    || true
-        [['A':VALUE_A, 'B':VALUE_B],['A':VALUE_A, 'C':VALUE_C]]                 || true
-        stateKeys = states.collect{ it.keySet() }
+        states                                                                       | compactThreshold || compacted
+        [['A': VALUE_A], [:]]                                                        | DEF_THRESHOLD    || true
+        [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], [:]]            | DEF_THRESHOLD    || true
+        [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_A]] | DEF_THRESHOLD    || true
+        [['A': VALUE_A, 'B': VALUE_B], ['A': VALUE_A]]                               | DEF_THRESHOLD    || true
+        [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B]]                               | DEF_THRESHOLD    || false
+        [['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_A, 'B': VALUE_B]]   | DEF_THRESHOLD    || false
+        [['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_B, 'B': VALUE_C]]   | DEF_THRESHOLD    || true
+        [['A': VALUE_A, 'B': VALUE_B], ['A': VALUE_A, 'C': VALUE_C]]                 | DEF_THRESHOLD    || true
+        [['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C], ['A': VALUE_A, 'B': VALUE_B]]   | 33               || true
+        [['A': VALUE_A], [:]]                                                        | 100              || false
+        [['A': VALUE_A], ['A': VALUE_A, 'B': VALUE_B]]                               | 0                || false
+        [['A': VALUE_A, 'B': VALUE_B], ['A': VALUE_A, 'C': VALUE_C]]                 | 0                || true
+        [['A': VALUE_A, 'B': VALUE_B], ['A': VALUE_A]]                               | 0                || true
+        stateKeys = states.collect { it.keySet() }
     }
 
     @Unroll
@@ -326,6 +381,7 @@ class MapSnapshotTest extends Specification {
         MapSnapshot.loadOrCreate(
                 tempDir,
                 'foo',
+                Options.defaults(),
                 keySerializer,
                 valueSerialzer)
 
@@ -333,46 +389,43 @@ class MapSnapshotTest extends Specification {
         thrown NullPointerException
 
         where:
-        keySerializer  | valueSerialzer
-        STRING         | null
-        null           | STRING
+        keySerializer | valueSerialzer
+        STRING        | null
+        null          | STRING
     }
 
-    def "delete tempfile on writeNext NewMapSnapshot"() {
+    @Unroll
+    def "next from new snapshot #map.keySet() options #options"() {
         given:
         def newSnapshot = new NewMapSnapshot(
                 'foo',
                 FileGroup.list(tempDir, 'foo'),
-                STRING,
-                STRING)
-        def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
-        oldTemp.write('irgendwas')
+                options,
+                KeyOrValueSerializer.STRING,
+                KeyOrValueSerializer.STRING)
 
         when:
-        newSnapshot.writeNext(['A':VALUE_A] )
+        def next = newSnapshot.writeNext(map)
+        def fileGroup = FileGroup.list(tempDir, 'foo')
 
         then:
-        FileGroup.list(tempDir, 'foo').exists()
-        !oldTemp.exists()
+        next.asImmutableMap().equals(map)
+        fileGroup.exists()
+        if(compression == GZipCompression.class) {
+            assert fileGroup.fullFile().toString().contains("gzip")
+        }
+
+        where:
+        map                                        | options              | compression
+        ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C] | Options.defaults()   | NoCompression.class
+        ['A': VALUE_A, 'B': VALUE_B, 'C': VALUE_C] | Options.compressed() | GZipCompression.class
     }
 
-    def "delete tempfile on writeNext PersistedMapSnapshot"() {
-        given:
-        def newSnapshot = new NewMapSnapshot(
-                'foo',
-                FileGroup.list(tempDir, 'foo'),
-                STRING,
-                STRING)
-        def persistedSnapshot = newSnapshot.writeNext(['A':VALUE_A] )
-        def oldTemp = FileGroup.list(tempDir, 'foo').createTempFile()
-        oldTemp.write('irgendwas')
-
-        when:
-        persistedSnapshot.writeNext(['A':VALUE_A, 'B': VALUE_B] )
-
-        then:
-        FileGroup.list(tempDir, 'foo').exists()
-        !oldTemp.exists()
+    def rename(PermaFile source, PermaFile target) {
+        toFile(source).renameTo(toFile(target))
     }
 
+    File toFile(def permaFile) {
+        return new File(permaFile.toString())
+    }
 }

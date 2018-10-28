@@ -112,9 +112,18 @@ For the Object array seriaizer, you have to provide the element class and a seri
 
 Implement the Interface KeyOrValueSerializer.
 
+## Configuration Options
+
+There are two configurable options:
+* compress: Use GZip Compression. Default: false (no compression)
+* compactThresholdPercent: The threshold, at which percentage of deleted or changed records a compact instead 
+of a delta persit is automatically performed. Default: 34 (34% or 0.34 of the current map size)
+
+Configuration is performed programatically by using the class ch.sbb.perma.Options (using the Builder provided).
+
 ## Spring Boot Integration
 
-Perma kann einfach in Spring Boot integriert werden, siehe Beispiel:
+Perma can easily be integrated into Spring Boot as shown in the following example:
 ```
 @Configuration
 public class PermaConfig {
@@ -140,14 +149,13 @@ public class PermaConfig {
     }
 }
 ```
-
 ## Files
 
 Perma stores data in many files, one full file and many delta files. Only the latest full File and its deltas are used.
 
-File name structure: 
+File permaName structure: 
 ```
-<map name>_<full file number>_<0 for full file or delta file number>.perma
+<map permaName>_<full file number>_<0 for full file or delta file number>.perma
 ```
 
 Perma files are immutable. Once written, they will never change (and the actual write is to a temporary file).
@@ -158,15 +166,15 @@ Perma files use a proprietary binary format.
 Each file starts with a header:
 
 ```
-5 bytes  | 2 bytes | 1 byt e  | 16 bytes  | 4 bytes     | name length bytes | 8 bytes  | 4 bytes
+5 bytes  | 2 bytes | 1 byt e  | 16 bytes  | 4 bytes     | permaName length bytes | 8 bytes  | 4 bytes
 ---------|---------|-----------------------------------------------------------------------------
-marker(1)| version | UUID (3) | number(4) | name length | name in UTF-8     | CRC32(5) | map size
+marker(1)| version | UUID (3) | number(4) | permaName length | permaName in UTF-8     | CRC32(5) | map size
 ```
 (1): File marker: "Perma" in UTF-8
 (2): Full (Wert 0)or Delta (Wert 1)
 (3): Die UUID marks the full file this file belongs to
 (4): The sequence number of the update file (0 for a full file)
-(5): CRC32 of (version, uuid, number, name length, name in utf-8) as bytes 
+(5): CRC32 of (version, uuid, number, permaName length, permaName in utf-8) as bytes 
 
 And then many records:
 

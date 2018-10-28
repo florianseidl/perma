@@ -13,7 +13,8 @@ class HeaderTest extends Specification {
         def out = new ByteArrayOutputStream()
 
         when:
-        def newHeader = Header.newFullHeader("foo",1).writeTo(out)
+        def newHeader = Header.newFullHeader("foo",1)
+        newHeader.writeTo(out)
         def reread = Header.readFrom(new ByteArrayInputStream(out.toByteArray()))
 
         then:

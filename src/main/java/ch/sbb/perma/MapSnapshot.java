@@ -4,6 +4,7 @@
 
 package ch.sbb.perma;
 
+import ch.sbb.perma.file.FileGroup;
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import com.google.common.collect.ImmutableMap;
 
@@ -20,6 +21,7 @@ import java.util.Map;
 interface MapSnapshot<K, V> {
     static <K, V> MapSnapshot<K,V> loadOrCreate(File dir,
                                            String name,
+                                           Options options,
                                            KeyOrValueSerializer<K> keySerializer,
                                            KeyOrValueSerializer<V> valueSerializer) throws IOException {
         if(keySerializer == null || valueSerializer == null) {
@@ -27,15 +29,17 @@ interface MapSnapshot<K, V> {
         }
         FileGroup files = FileGroup.list(dir, name);
         if (!files.exists()) {
-            return new NewMapSnapshot<K, V>(
+            return new NewMapSnapshot<>(
                     name,
                     files,
+                    options,
                     keySerializer,
                     valueSerializer);
         }
         return PersistedMapSnapshot.load(
                 name,
                 files,
+                options,
                 keySerializer,
                 valueSerializer);
     }
