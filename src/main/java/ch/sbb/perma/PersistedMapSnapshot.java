@@ -89,8 +89,11 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
             LOG.debug("Noting to write (no changes detected), ignoring");
             return this;
         }
-        if(moreThanAThirdUpdatedOrDeleted(diff)) {
-            LOG.debug("More than a third of the records are added and/or deleted, compacting to full file");
+        if(options.compactionStrategy().triggerCompaction(
+                diff.entriesOnlyOnLeft().size(),
+                diff.entriesDiffering().size(),
+                mapSnapshot.size())) {
+            LOG.debug("More than the configured threshold of the records are changed and/or deleted, compacting to full file");
             return compactTo(currentImmutable);
         }
         FileGroup filesWithNextDeltaFile = files.withNextDelta();
@@ -109,15 +112,10 @@ class PersistedMapSnapshot<K,V> implements MapSnapshot<K,V> {
                                 valueSerializer);
     }
 
-    private boolean moreThanAThirdUpdatedOrDeleted(MapDifference<K,V> diff) {
-        return ((double)diff.entriesOnlyOnLeft().size() + diff.entriesDiffering().size())
-                > (mapSnapshot.size() / 3.0);
-    }
-
     @Override
     public MapSnapshot<K, V> refresh() throws IOException {
         FileGroup refreshedFiles = files.refresh();
-        if(!refreshedFiles.hasSameFullFileAs(files)) { // there was a compact, reload
+        if(!refreshedFiles.hasSameFullFileAs(files)) { // there was a triggerCompaction, reload
             LOG.debug("Reloading instead of refresh, full file has changed");
             return load(name, refreshedFiles, options, keySerializer, valueSerializer);
         }

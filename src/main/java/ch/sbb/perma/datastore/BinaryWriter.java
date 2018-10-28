@@ -24,9 +24,9 @@ public class BinaryWriter {
     private final OutputStream out;
     private final Checksum checksum;
 
-    BinaryWriter(OutputStream out, Checksum crc32) {
+    BinaryWriter(OutputStream out, Checksum checksum) {
         this.out = out;
-        this.checksum = crc32;
+        this.checksum = checksum;
     }
 
     public BinaryWriter(OutputStream out) {

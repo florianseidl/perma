@@ -13,7 +13,7 @@ import com.google.common.base.Preconditions;
 /**
  * API to configure optional features in perma.
  * <ul>
- *     <li>Compress: Switch on or off GZip compression of files. Default is off (false)</li>
+ * <li>Compress: Switch on or off GZip compression of files. Default is off (false)</li>
  * </ul>
  *
  * @author u206123 (Florian Seidl)
@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 public class Options {
     public static class Builder {
         private boolean compress = false;
-        private int compactThresholdPercent = 33;
+        private int compactThresholdPercent = 34;
 
         private Builder() {
         }
@@ -32,7 +32,7 @@ public class Options {
             return this;
         }
 
-        public Builder compactThresholdPercent(int compactThresholdPercent) {
+        Builder compactThresholdPercent(int compactThresholdPercent) {
             this.compactThresholdPercent = compactThresholdPercent;
             return this;
         }
@@ -44,6 +44,7 @@ public class Options {
             return new Options(compress, compactThresholdPercent);
         }
     }
+
     private final boolean compress;
     private final int compactThresholdPercent;
 
@@ -68,11 +69,19 @@ public class Options {
         };
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
     Compression compression() {
-        if(compress) {
+        if (compress) {
             return new GZipCompression();
         }
         return new NoCompression();
+    }
+
+    CompactionThreshold compactionStrategy() {
+        return new ChangedRemovedCompactionThreshold(compactThresholdPercent);
     }
 
     @Override
