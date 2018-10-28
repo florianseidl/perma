@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +43,7 @@ class DeltaFilePattern {
         return fullFileName.delta(parseFileNumber(matcher));
     }
 
-    private int parseFileNumber(Matcher matcher) {
+    private int parseFileNumber(MatchResult matcher) {
         return Integer.parseInt(matcher.group(1));
     }
 }

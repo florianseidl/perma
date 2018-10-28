@@ -4,12 +4,7 @@
 
 package ch.sbb.perma.serializers;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * Serialize and deserialize using java serialization.
@@ -23,7 +18,7 @@ public class JavaObjectSerializer<T extends Serializable> implements KeyOrValueS
     @Override
     public byte[] toByteArray(T object) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+        try (ObjectOutput oos = new ObjectOutputStream(bos)) {
             oos.writeObject(object);
             oos.flush();
             return bos.toByteArray();

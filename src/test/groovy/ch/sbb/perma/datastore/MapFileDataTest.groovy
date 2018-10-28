@@ -62,7 +62,7 @@ class MapFileDataTest extends Specification {
 
         where:
         map << [['A':VALUE_A], ['A':VALUE_A, 'B':VALUE_B], [:], ['A':VALUE_A, 'B':VALUE_B, 'C':VALUE_C]] * 2
-        compression << [new NoCompression()] * 4 + [new GZipCompression()] * 4
+        compression << [NoCompression.NO_COMPRESSION] * 4 + [GZipCompression.GZIP_COMPRESSION] * 4
     }
 
     @Unroll

@@ -14,6 +14,10 @@ import java.io.OutputStream;
  * @since 6.2, 2018.
  */
 public class NoCompression implements Compression {
+    public static final NoCompression NO_COMPRESSION = new NoCompression();
+
+    private NoCompression() {
+    }
 
     @Override
     public OutputStream compress(OutputStream out) {

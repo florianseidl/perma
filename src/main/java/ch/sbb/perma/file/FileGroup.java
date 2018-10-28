@@ -113,16 +113,14 @@ public class FileGroup {
         return deltaFiles.get(deltaFiles.size() -1).nextDelta();
     }
 
-    public boolean delete() throws IOException {
+    public void delete() throws IOException {
         if (!exists()) {
-            return false;
+            return;
         }
-        boolean deleted = fullFile().delete();
+        fullFile().delete();
         for (PermaFile deltaFile : deltaFiles()) {
-            boolean deletedDelta = deltaFile.delete();
-            deleted = deleted || deletedDelta;
+            deltaFile.delete();
         }
-        return deleted;
     }
 
     @Override

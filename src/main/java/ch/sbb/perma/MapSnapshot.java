@@ -29,7 +29,7 @@ interface MapSnapshot<K, V> {
         }
         FileGroup files = FileGroup.list(dir, name);
         if (!files.exists()) {
-            return new NewMapSnapshot<K, V>(
+            return new NewMapSnapshot<>(
                     name,
                     files,
                     options,

@@ -81,7 +81,7 @@ class NewMapSnapshot<K,V> implements MapSnapshot<K,V> {
     }
 
     @Override
-    public MapSnapshot<K, V> compact() throws IOException {
+    public MapSnapshot<K, V> compact() {
         return this;
     }
 

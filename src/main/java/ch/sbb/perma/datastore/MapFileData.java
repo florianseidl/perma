@@ -25,14 +25,14 @@ public class MapFileData<K,V> {
     private final ImmutableMap<K,V> newAndUpdated;
     private final ImmutableSet<K> deleted;
 
-    MapFileData(Header header, ImmutableMap<K, V> newAndUpdated, ImmutableSet<K> deleted) {
+    private MapFileData(Header header, ImmutableMap<K, V> newAndUpdated, ImmutableSet<K> deleted) {
         this.header = header;
         this.newAndUpdated = newAndUpdated;
         this.deleted = deleted;
     }
 
     public static <K,V> MapFileData<K,V> createNewFull(String name, ImmutableMap<K, V> current) {
-        return new MapFileData<K,V>(
+        return new MapFileData<>(
                 Header.newFullHeader(name, current.size()),
                 current,
                 ImmutableSet.of()

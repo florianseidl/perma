@@ -10,6 +10,6 @@ package ch.sbb.perma;
  * @author u206123 (Florian Seidl)
  * @since 6.2, 2018.
  */
-public interface CompactionThreshold {
+interface CompactionThreshold {
     boolean triggerCompaction(int entriesAdded, int entriesRemoved, int totalSize);
 }

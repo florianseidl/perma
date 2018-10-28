@@ -17,6 +17,10 @@ import java.util.zip.GZIPOutputStream;
  * @since 6.2, 2018.
  */
 public class GZipCompression implements Compression {
+    public static final GZipCompression GZIP_COMPRESSION = new GZipCompression();
+
+    private GZipCompression() {
+    }
 
     @Override
     public OutputStream compress(OutputStream out) throws IOException {

@@ -75,9 +75,9 @@ public class Options {
 
     Compression compression() {
         if (compress) {
-            return new GZipCompression();
+            return GZipCompression.GZIP_COMPRESSION;
         }
-        return new NoCompression();
+        return NoCompression.NO_COMPRESSION;
     }
 
     CompactionThreshold compactionStrategy() {

@@ -9,7 +9,7 @@ import ch.sbb.perma.SpecificationWithTempDir
 class PermaFileTest extends SpecificationWithTempDir {
     def "write"() {
         given:
-        def fullFile = PermaFile.fullFile(new NoCompression(), tempDir, 'foo', 1)
+        def fullFile = PermaFile.fullFile(NoCompression.NO_COMPRESSION, tempDir, 'foo', 1)
 
         when:
         fullFile.withOutputStream({out -> out.write('something'.bytes)})
@@ -20,7 +20,7 @@ class PermaFileTest extends SpecificationWithTempDir {
 
     def "no remaining tempfile"() {
         given:
-        def fullFile = PermaFile.fullFile(new NoCompression(), tempDir, 'foo', 1)
+        def fullFile = PermaFile.fullFile(NoCompression.NO_COMPRESSION, tempDir, 'foo', 1)
 
         when:
         fullFile.withOutputStream({out -> out.write('something'.bytes)})
@@ -31,7 +31,7 @@ class PermaFileTest extends SpecificationWithTempDir {
 
     def "write and read"() {
         given:
-        def fullFile = PermaFile.fullFile(new NoCompression(), tempDir, 'foo', 1)
+        def fullFile = PermaFile.fullFile(NoCompression.NO_COMPRESSION, tempDir, 'foo', 1)
         def bytes = 'something'.bytes
 
         when:

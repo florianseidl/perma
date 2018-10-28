@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,10 +52,10 @@ class FullFilePattern {
     }
 
     private Compression compressionOf(String filename) {
-        return GZIP_FILE_NAME_PATTERN.matcher(filename).matches() ? new GZipCompression() : new NoCompression();
+        return GZIP_FILE_NAME_PATTERN.matcher(filename).matches() ? GZipCompression.GZIP_COMPRESSION : NoCompression.NO_COMPRESSION;
     }
 
-    private int parseFileNumber(Matcher matcher) {
+    private int parseFileNumber(MatchResult matcher) {
         return Integer.parseInt(matcher.group(1));
     }
 }

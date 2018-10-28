@@ -45,10 +45,6 @@ public final class PermaFile implements Comparable<PermaFile> {
         return new PermaFile(compression, dir, permaName, fullFileNumber, nr);
     }
 
-    public Compression compression() {
-        return compression;
-    }
-
     public <R> R withInputStream(IOFunction<InputStream, R> function) throws IOException {
         try(InputStream in = compression.decompress(new FileInputStream(toFile()))) {
             return function.apply(in);
@@ -75,10 +71,12 @@ public final class PermaFile implements Comparable<PermaFile> {
         if (other == null || getClass() != other.getClass()) {
             return false;
         }
-        PermaFile otherFileName = (PermaFile) other;
-        return Objects.equals(permaName, otherFileName.permaName) &&
-                fullFileNumber == otherFileName.fullFileNumber &&
-                deltaFileNumber == otherFileName.deltaFileNumber;
+        PermaFile otherFile = (PermaFile) other;
+        return fullFileNumber == otherFile.fullFileNumber &&
+                deltaFileNumber == otherFile.deltaFileNumber &&
+                Objects.equals(compression, otherFile.compression) &&
+                Objects.equals(dir, otherFile.dir) &&
+                Objects.equals(permaName, otherFile.permaName);
     }
 
     @Override

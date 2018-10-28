@@ -130,15 +130,15 @@ class FileGroupTest extends SpecificationWithTempDir {
         hasName(nextFullFile, expectedNextFullFile)
 
         where:
-        files                               | compression           || expectedNextFullFile
-        ['foo_1_0.perma']                   | new NoCompression()   || 'foo_2_0.perma'
-        ['foo_1_0.perma', 'foo_7_0.perma']  | new NoCompression()   || 'foo_8_0.perma'
-        ['foo_1_0.perma', 'foo_1_43.perma'] | new NoCompression()   || 'foo_2_0.perma'
-        []                                  | new NoCompression()   || 'foo_1_0.perma'
-        ['foo_1_43.perma']                  | new NoCompression()   || 'foo_1_0.perma'
-        ['foo_1_0.perma.gzip']              | new GZipCompression() || 'foo_2_0.perma.gzip'
-        ['foo_1_0.perma', 'foo_2_0.perma']  | new GZipCompression() || 'foo_3_0.perma.gzip'
-        []                                  | new GZipCompression() || 'foo_1_0.perma.gzip'
+        files                               | compression                      || expectedNextFullFile
+        ['foo_1_0.perma']                   | NoCompression.NO_COMPRESSION     || 'foo_2_0.perma'
+        ['foo_1_0.perma', 'foo_7_0.perma']  | NoCompression.NO_COMPRESSION     || 'foo_8_0.perma'
+        ['foo_1_0.perma', 'foo_1_43.perma'] | NoCompression.NO_COMPRESSION     || 'foo_2_0.perma'
+        []                                  | NoCompression.NO_COMPRESSION     || 'foo_1_0.perma'
+        ['foo_1_43.perma']                  | NoCompression.NO_COMPRESSION     || 'foo_1_0.perma'
+        ['foo_1_0.perma.gzip']              | GZipCompression.GZIP_COMPRESSION || 'foo_2_0.perma.gzip'
+        ['foo_1_0.perma', 'foo_2_0.perma']  | GZipCompression.GZIP_COMPRESSION || 'foo_3_0.perma.gzip'
+        []                                  | GZipCompression.GZIP_COMPRESSION || 'foo_1_0.perma.gzip'
     }
 
     def touch(permaName) {
@@ -252,28 +252,28 @@ class FileGroupTest extends SpecificationWithTempDir {
     }
 
     @Unroll
-    def "compression #files"() {
+    def "detected compression #files"() {
         given:
         files.forEach {
             touch(it)
         }
 
         when:
-        def compression = FileGroup.list(tempDir, 'foo').fullFile().compression()
+        def fullFileName = FileGroup.list(tempDir, 'foo').fullFile().toString()
 
         then:
-        compression.class == expectedCompression
+        fullFileName.endsWith(expectedExtention)
 
         where:
-        files                                   || expectedCompression
-        ['foo_1_0.perma']                       || NoCompression.class
-        ['foo_1_0.perma.gzip']                  || GZipCompression.class
-        ['foo_1_0.perma', 'foo_2_0.perma']      || NoCompression.class
-        ['foo_1_0.perma', 'foo_2_0.perma.gzip'] || GZipCompression.class
-        ['foo_1_0.perma.gzip', 'foo_2_0.perma'] || NoCompression.class
+        files                                   || expectedExtention
+        ['foo_1_0.perma']                       || '.perma'
+        ['foo_1_0.perma.gzip']                  || '.perma.gzip'
+        ['foo_1_0.perma', 'foo_2_0.perma']      || '.perma'
+        ['foo_1_0.perma', 'foo_2_0.perma.gzip'] || '.perma.gzip'
+        ['foo_1_0.perma.gzip', 'foo_2_0.perma'] || '.perma'
         ['foo_1_0.perma', 'foo_1_1.perma',
-         'foo_2_0.perma.gzip']                  || GZipCompression.class
-        ['foo_1_0.perma', 'foo_1_1.perma.gzip'] || NoCompression.class // invalid szenario
+         'foo_2_0.perma.gzip']                  || '.perma.gzip'
+        ['foo_1_0.perma', 'foo_1_1.perma.gzip'] || '.perma' // invalid szenario
     }
 
     def toStringIsImplemented() {
@@ -289,7 +289,7 @@ class FileGroupTest extends SpecificationWithTempDir {
     }
 
     private static boolean hasNames(List<PermaFile> files, List<String> names) {
-        return files.collect{nameOf(it)}.equals(names)
+        return files.collect { nameOf(it) }.equals(names)
     }
 
     private static String nameOf(def permaOrTempFile) {

@@ -112,9 +112,18 @@ For the Object array seriaizer, you have to provide the element class and a seri
 
 Implement the Interface KeyOrValueSerializer.
 
+## Configuration Options
+
+There are two configurable options:
+* compress: Use GZip Compression. Default: false (no compression)
+* compactThresholdPercent: The threshold, at which percentage of deleted or changed records a compact instead 
+of a delta persit is automatically performed. Default: 34 (34% or 0.34 of the current map size)
+
+Configuration is performed programatically by using the class ch.sbb.perma.Options (using the Builder provided).
+
 ## Spring Boot Integration
 
-Perma kann einfach in Spring Boot integriert werden, siehe Beispiel:
+Perma can easily be integrated into Spring Boot as shown in the following example:
 ```
 @Configuration
 public class PermaConfig {
@@ -140,7 +149,6 @@ public class PermaConfig {
     }
 }
 ```
-
 ## Files
 
 Perma stores data in many files, one full file and many delta files. Only the latest full File and its deltas are used.
