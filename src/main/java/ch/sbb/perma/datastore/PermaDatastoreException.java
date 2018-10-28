@@ -11,7 +11,7 @@ package ch.sbb.perma.datastore;
  * @since 1.0, 2017.
  */
 public class PermaDatastoreException extends RuntimeException {
-    public PermaDatastoreException(String s) {
+    PermaDatastoreException(String s) {
         super(s);
     }
 }

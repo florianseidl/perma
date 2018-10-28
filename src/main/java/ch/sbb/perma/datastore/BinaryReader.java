@@ -24,7 +24,7 @@ public class BinaryReader {
     private final InputStream in;
     private final Checksum checksum;
 
-    public BinaryReader(InputStream in, Checksum crc32) {
+    BinaryReader(InputStream in, Checksum crc32) {
         this.in = in;
         this.checksum = crc32;
     }

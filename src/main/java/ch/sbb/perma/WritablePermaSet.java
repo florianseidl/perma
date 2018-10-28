@@ -5,7 +5,6 @@
 package ch.sbb.perma;
 
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ForwardingSet;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -50,20 +49,28 @@ public class WritablePermaSet<T> extends ForwardingSet<T> implements WritableSet
     }
 
     public static WritablePermaSet<String> loadOrCreateStringSet(File dir, String name) throws IOException {
+        return loadOrCreateStringSet(dir, name, Options.defaults());
+    }
+
+    public static WritablePermaSet<String> loadOrCreateStringSet(File dir, String name, Options options) throws IOException {
         return WritablePermaSet.loadOrCreate(dir,
                                             name,
-                                            KeyOrValueSerializer.STRING);
+                                            KeyOrValueSerializer.STRING,
+                                            options);
     }
 
     public static <T> WritablePermaSet<T> loadOrCreate(File dir,
                                                        String name,
                                                        KeyOrValueSerializer<T> serializer) throws IOException {
-        LOG.info("Loading writabe PermaSet {} from directory {}", name, dir);
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        WritablePermaSet<T> permaSet = new WritablePermaSet<>(MapSnapshot.loadOrCreate(dir, name, serializer, NULL));
-        stopwatch.stop();
-        LOG.debug("Writable PermaSet {} loaded or created successfully in {} ms", name, stopwatch.elapsed().toMillis());
-        return permaSet;
+        return loadOrCreate(dir, name, serializer, Options.defaults());
+    }
+
+    public static <T> WritablePermaSet<T> loadOrCreate(File dir,
+                                                       String name,
+                                                       KeyOrValueSerializer<T> serializer,
+                                                       Options options) throws IOException {
+        LOG.info("Loading writabe PermaSet {} from directory {} with options {}", name, dir, options);
+        return new WritablePermaSet<>(MapSnapshot.loadOrCreate(dir, name, options, serializer, NULL));
     }
 
     public void persist() throws IOException {

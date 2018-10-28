@@ -4,7 +4,7 @@
 
 package ch.sbb.perma.datastore;
 
-import ch.sbb.perma.FileRenameException;
+import ch.sbb.perma.file.PermaFile;
 import ch.sbb.perma.serializers.KeyOrValueSerializer;
 import ch.sbb.perma.serializers.NullValueSerializer;
 import com.google.common.collect.ImmutableMap;
@@ -25,21 +25,25 @@ public class MapFileData<K,V> {
     private final ImmutableMap<K,V> newAndUpdated;
     private final ImmutableSet<K> deleted;
 
-    MapFileData(Header mapFileHeader, ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
-        this.header = mapFileHeader;
+    private MapFileData(Header header, ImmutableMap<K, V> newAndUpdated, ImmutableSet<K> deleted) {
+        this.header = header;
         this.newAndUpdated = newAndUpdated;
         this.deleted = deleted;
     }
 
-    public static <K,V> MapFileData<K,V> createNewFull(String name, ImmutableMap<K,V> current) {
-        return new MapFileData<>(Header.newFullHeader(name, current.size()), current, ImmutableSet.of());
+    public static <K,V> MapFileData<K,V> createNewFull(String name, ImmutableMap<K, V> current) {
+        return new MapFileData<>(
+                Header.newFullHeader(name, current.size()),
+                current,
+                ImmutableSet.of()
+        );
     }
 
-    public static <K,V> MapFileData<K,V> readFileGroupAndCollect(File fullFile,
-                                                                 List<File> deltaFiles,
+    public static <K,V> MapFileData<K,V> readFileGroupAndCollect(PermaFile fullFile,
+                                                                 List<PermaFile> deltaFiles,
                                                                  KeyOrValueSerializer<K> keySerializer,
                                                                  KeyOrValueSerializer<V> valueSerializer,
-                                                                 Map<K,V> collector) throws IOException {
+                                                                 Map<K, V> collector) throws IOException {
         MapFileData<K,V> latestData = MapFileData.readFrom(fullFile, keySerializer, valueSerializer)
                     .addTo(collector);
         if(!latestData.header.isFullFile()) {
@@ -48,17 +52,22 @@ public class MapFileData<K,V> {
                                     latestData.header));
 
         }
-        latestData = readDeltaFilesAndCollect(deltaFiles, keySerializer, valueSerializer, latestData, collector);
+        latestData = readDeltaFilesAndCollect(
+                                    deltaFiles,
+                                    keySerializer,
+                                    valueSerializer,
+                                    latestData,
+                                    collector);
         return latestData;
     }
 
-    private static <K, V> MapFileData<K, V> readDeltaFilesAndCollect(List<File> deltaFiles,
+    private static <K, V> MapFileData<K, V> readDeltaFilesAndCollect(List<PermaFile> deltaFiles,
                                                                      KeyOrValueSerializer<K> keySerializer,
                                                                      KeyOrValueSerializer<V> valueSerializer,
                                                                      MapFileData<K, V> previousData,
                                                                      Map<K, V> collector) throws IOException {
         MapFileData<K,V> latestData = previousData;
-        for(File deltaFile : deltaFiles) {
+        for(PermaFile deltaFile : deltaFiles) {
             MapFileData<K,V> next = MapFileData
                     .readFrom(deltaFile, keySerializer, valueSerializer)
                     .addTo(collector);
@@ -73,14 +82,11 @@ public class MapFileData<K,V> {
         return latestData;
     }
 
-    private static <K,V> MapFileData<K,V> readFrom(File file,
+    private static <K,V> MapFileData<K,V> readFrom(PermaFile file,
                                                    KeyOrValueSerializer<K> keySerializer,
                                                    KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
-            return readFrom(in, keySerializer, valueSerializer);
-        }
+        return file.withInputStream(in -> readFrom(in, keySerializer, valueSerializer));
     }
-
 
     static <K,V> MapFileData<K,V> readFrom(InputStream input,
                                            KeyOrValueSerializer<K> keySerializer,
@@ -105,31 +111,21 @@ public class MapFileData<K,V> {
         }
     }
 
-    public MapFileData<K,V> updateWithDeltasAndCollect(List<File> additionalDeltaFiles,
+    public MapFileData<K,V> updateWithDeltasAndCollect(List<PermaFile> additionalDeltaFiles,
                                                        KeyOrValueSerializer<K> keySerializer,
                                                        KeyOrValueSerializer<V> valueSerializer,
                                                        Map<K,V> collector) throws IOException {
-        return readDeltaFilesAndCollect(additionalDeltaFiles, keySerializer, valueSerializer, this, collector);
+        return readDeltaFilesAndCollect(additionalDeltaFiles,
+                                        keySerializer,
+                                        valueSerializer,
+                                        this,
+                                        collector);
     }
 
-    public MapFileData<K,V> writeTo(File file,
-                                    File tempFile, KeyOrValueSerializer<K> keySerializer,
+    public MapFileData<K,V> writeTo(PermaFile targetFile,
+                                    KeyOrValueSerializer<K> keySerializer,
                                     KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        MapFileData<K,V> mapFileData = writeToTempFile(tempFile, keySerializer, valueSerializer);
-        if(!tempFile.renameTo(file)) {
-            throw new FileRenameException(String.format("Could not rename temporary file %s to perma set file %s",
-                    tempFile,
-                    file));
-        }
-        return mapFileData;
-    }
-
-    private MapFileData<K,V> writeToTempFile(File tempFile,
-                                             KeyOrValueSerializer<K> keySerializer,
-                                             KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tempFile))) {
-            return writeTo(out, keySerializer, valueSerializer);
-        }
+        return targetFile.withOutputStream(out -> writeTo(out, keySerializer, valueSerializer));
     }
 
     MapFileData<K,V> writeTo(OutputStream output,
@@ -156,7 +152,11 @@ public class MapFileData<K,V> {
     }
 
     public MapFileData<K,V> nextDelta(ImmutableMap<K,V> newAndUpdated, ImmutableSet<K> deleted) {
-        return new MapFileData<>(header.nextDelta(newAndUpdated.size() + deleted.size()), newAndUpdated, deleted);
+        return new MapFileData<>(
+                        header.nextDelta(newAndUpdated.size() + deleted.size()),
+                        newAndUpdated,
+                        deleted
+        );
     }
 
     MapFileData<K,V> addTo(Map<K,V> map) {

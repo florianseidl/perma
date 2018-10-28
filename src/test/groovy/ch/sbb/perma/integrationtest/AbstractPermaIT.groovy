@@ -1,9 +1,12 @@
 /*
- * Copyright (C) Schweizerische Bundesbahnen SBB, 2017.
+ * Copyright (C) Schweizerische Bundesbahnen SBB, 2018.
  */
 
-package ch.sbb.perma
+package ch.sbb.perma.integrationtest
 
+import ch.sbb.perma.Options
+import ch.sbb.perma.ReadOnlyPerma
+import ch.sbb.perma.WritablePerma
 import com.google.common.collect.Maps
 import spock.lang.Specification
 import spock.lang.Timeout
@@ -17,14 +20,16 @@ import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY
 /**
  * Test the performance and memory usage with real load.
  * <p>
- * Warning: will require 10GB ram and disk space. Disabled by default in POM.
+ *     Extend with Options to run.
  *
  * @author u206123 (Florian Seidl)
  * @since 1.0 , 2017.
  */
-class PermaIT extends Specification {
+abstract class AbstractPermaIT extends Specification {
 
     File tempDir
+
+    abstract Options options()
 
     def setupSpec() {
         System.setProperty(DEFAULT_LOG_LEVEL_KEY, "TRACE");
@@ -54,7 +59,7 @@ class PermaIT extends Specification {
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     def "write #writes times map of #mapSize random entries in #threads thread"() {
         given:
-        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING, options())
 
         when:
         final int writesInThread = writes / threads
@@ -97,7 +102,7 @@ class PermaIT extends Specification {
     @Timeout(value = 2, unit = TimeUnit.MINUTES)
     def "write remove #writes times map of #mapSize entries in #threads thread"() {
         given:
-        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING, options())
 
         when:
         final int writesInThread = writes / threads
@@ -142,7 +147,7 @@ class PermaIT extends Specification {
     @Timeout(value = 2, unit = TimeUnit.MINUTES)
     def "write #writes times and read #reads times map of #mapSize entries in #writeThreads write threads #readThreads read threads"() {
         given:
-        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING, options())
         def permaReadOnly = ReadOnlyPerma.load(tempDir, "bigmap", STRING, STRING)
 
         when:
@@ -194,7 +199,7 @@ class PermaIT extends Specification {
     @Timeout(value = 2, unit = TimeUnit.MINUTES)
     def "write comapct #threads write threads #compactThreads compact threads"() {
         given:
-        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING)
+        def perma = WritablePerma.loadOrCreate(tempDir, "bigmap", STRING, STRING, options())
 
         when:
         def writer = new Runnable() {

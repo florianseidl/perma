@@ -4,24 +4,14 @@
 
 package ch.sbb.perma
 
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.LocalDate
 
 import static ch.sbb.perma.serializers.KeyOrValueSerializer.*
 
-class PermaSetTest extends Specification {
+class PermaSetTest extends SpecificationWithTempDir {
     private static String LONG_STRING = 'the quick brown fox jumped over the lazy cat'.multiply(99999)
-    File tempDir
-
-    def setup() {
-        tempDir = File.createTempDir()
-    }
-
-    def cleanup() {
-        tempDir.deleteDir()
-    }
 
     @Unroll
     def "write read #nr"() {

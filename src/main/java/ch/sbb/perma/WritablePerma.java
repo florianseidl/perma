@@ -38,18 +38,31 @@ public class WritablePerma<K,V> extends ForwardingConcurrentMap<K,V> implements 
     }
 
     public static WritablePerma<String, String> loadOrCreateStringMap(File dir, String name) throws IOException {
+        return loadOrCreateStringMap(dir, name, Options.defaults());
+    }
+
+    public static WritablePerma<String, String> loadOrCreateStringMap(File dir, String name, Options options) throws IOException {
         return loadOrCreate(dir,
-                            name,
-                            KeyOrValueSerializer.STRING,
-                            KeyOrValueSerializer.STRING);
+                name,
+                KeyOrValueSerializer.STRING,
+                KeyOrValueSerializer.STRING,
+                options);
     }
 
     public static <K,V> WritablePerma<K,V> loadOrCreate(File dir,
                                                         String name,
                                                         KeyOrValueSerializer<K> keySerializer,
                                                         KeyOrValueSerializer<V> valueSerializer) throws IOException {
-        LOG.info("Loading writabe Perma {} from directory {}", name, dir);
-        return new WritablePerma<>(MapSnapshot.loadOrCreate(dir, name, keySerializer, valueSerializer));
+        return loadOrCreate(dir, name, keySerializer, valueSerializer, Options.defaults());
+    }
+
+    public static <K,V> WritablePerma<K,V> loadOrCreate(File dir,
+                                                        String name,
+                                                        KeyOrValueSerializer<K> keySerializer,
+                                                        KeyOrValueSerializer<V> valueSerializer,
+                                                        Options options) throws IOException {
+        LOG.info("Loading writabe Perma {} from directory {} with options {}", name, dir, options);
+        return new WritablePerma<>(MapSnapshot.loadOrCreate(dir, name, options, keySerializer, valueSerializer));
     }
 
     public void persist() throws IOException {
