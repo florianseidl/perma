@@ -1,0 +1,2 @@
+#!groovy
+touri_buildAndDeploy()
