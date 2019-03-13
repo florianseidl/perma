@@ -212,7 +212,7 @@ class FileGroupTest extends SpecificationWithTempDir {
                 .delete()
 
         then:
-        tempDir.list() == remaining as String[]
+        tempDir.list() as Set == remaining as Set
 
         where:
         files                              || remaining
